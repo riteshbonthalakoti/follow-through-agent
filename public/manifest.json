@@ -1,0 +1,25 @@
+{
+  "name": "Follow-Through Agent",
+  "short_name": "FollowThrough",
+  "description": "The AI that owns your open loops",
+  "theme_color": "#0f0f0f",
+  "background_color": "#0f0f0f",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/dashboard",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ]
+}
