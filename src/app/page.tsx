@@ -62,20 +62,40 @@ function MiniCard({
   )
 }
 
-// ── Hero right column — Spline via iframe (no bundling issues) ───────────────
+// ── Hero right column — animated loop board mock ─────────────────────────────
 
 function HeroVisual() {
   return (
-    <div className="w-full h-[460px] lg:h-[560px] relative rounded-2xl overflow-hidden">
-      <iframe
-        src="https://my.spline.design/6Wq1Q7YGyM-iab9i/"
-        frameBorder="0"
-        width="100%"
-        height="100%"
-        title="Spline 3D scene"
-        loading="lazy"
-        style={{ border: 'none' }}
-      />
+    <div className="w-full h-[460px] lg:h-[560px] relative rounded-2xl overflow-hidden bg-white border border-gray-200 shadow-sm flex flex-col p-6">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-sm font-semibold text-gray-900">My Loops</span>
+        <span className="text-xs bg-violet-100 text-violet-700 font-medium px-2 py-0.5 rounded-full">3 need action</span>
+      </div>
+
+      {/* Loop rows */}
+      {[
+        { state: 'overdue' as const, name: 'Rahul', desc: 'Send revised proposal PDF', when: '3 days overdue' },
+        { state: 'due' as const, name: 'TechCorp HR', desc: 'Share interview feedback', when: 'Due today' },
+        { state: 'waiting' as const, name: 'Priya', desc: 'Confirm next week's meeting', when: 'Due in 2 days' },
+        { state: 'waiting' as const, name: 'Accountant', desc: 'Send Q3 tax docs', when: 'Due in 5 days' },
+      ].map((item, i) => (
+        <MiniCard key={i} {...item} />
+      ))}
+
+      {/* Approval card */}
+      <div className="mt-4 bg-gray-50 border border-gray-200 rounded-xl p-4 flex-1">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-red-100 text-red-700">Rahul — Overdue</span>
+        </div>
+        <p className="text-xs text-gray-600 font-mono leading-relaxed mb-3">
+          Hi Rahul, following up on the proposal from last week. Could you let me know if you had a chance to review it?
+        </p>
+        <div className="flex gap-2">
+          <button className="flex-1 py-1.5 rounded-lg bg-violet-700 text-white text-xs font-medium">Approve & Send</button>
+          <button className="flex-1 py-1.5 rounded-lg border border-gray-300 text-gray-600 text-xs font-medium">Edit</button>
+        </div>
+      </div>
     </div>
   )
 }
