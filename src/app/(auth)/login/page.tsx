@@ -33,15 +33,15 @@ export default function LoginPage() {
 
   if (sent) {
     return (
-      <main className="min-h-screen flex items-center justify-center px-6 bg-gray-50">
+      <main className="min-h-screen flex items-center justify-center px-6" style={{ backgroundColor: '#fafaf9' }}>
         <div className="max-w-sm w-full text-center">
           <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-5">
-            <span className="text-green-600 text-xl">✓</span>
+            <span className="text-green-600 text-xl font-bold">✓</span>
           </div>
           <h1 className="text-xl font-semibold text-gray-900 mb-2">Check your email</h1>
           <p className="text-gray-500 text-sm">
-            We sent a magic link to <span className="text-gray-900 font-medium">{email}</span>.
-            Click it to sign in.
+            We sent a magic link to{' '}
+            <span className="text-gray-900 font-medium">{email}</span>. Click it to sign in.
           </p>
           <Link href="/" className="inline-block mt-6 text-sm text-violet-700 hover:underline">
             ← Back to home
@@ -52,21 +52,23 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-6 bg-gray-50">
+    <main className="min-h-screen flex items-center justify-center px-6" style={{ backgroundColor: '#fafaf9' }}>
       <div className="max-w-sm w-full">
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="w-12 h-12 rounded-full bg-violet-700 flex items-center justify-center mx-auto mb-4">
             <span className="text-white text-xl font-bold">F</span>
           </div>
-          <h1 className="text-xl font-semibold text-gray-900">FollowThrough</h1>
-          <p className="text-gray-500 text-sm mt-1">The AI that tracks what others owe you</p>
+          <h1
+            className="text-2xl font-bold text-gray-900"
+            style={{ fontFamily: 'var(--font-playfair)' }}
+          >
+            FollowThrough
+          </h1>
+          <p className="text-gray-500 text-sm mt-1">Track what others owe you.</p>
         </div>
 
-        <div
-          className="bg-white rounded-xl p-6 border border-gray-200"
-          style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
-        >
+        <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
           <h2 className="text-gray-900 font-semibold text-base mb-4">Sign in</h2>
           <form onSubmit={handleLogin} className="space-y-3">
             <input
