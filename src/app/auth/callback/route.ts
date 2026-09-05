@@ -1,24 +1,9 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
 
+// Redirect to the client-side handler which can access both query params
+// and the hash fragment (access_token from implicit flow).
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url)
-  const code = searchParams.get('code')
-  const token_hash = searchParams.get('token_hash')
-  const type = searchParams.get('type') as 'magiclink' | 'email' | null
-  const next = searchParams.get('next') ?? '/dashboard'
-
-  const supabase = await createClient()
-
-  if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) return NextResponse.redirect(`${origin}${next}`)
-  }
-
-  if (token_hash && type) {
-    const { error } = await supabase.auth.verifyOtp({ token_hash, type })
-    if (!error) return NextResponse.redirect(`${origin}${next}`)
-  }
-
-  return NextResponse.redirect(`${origin}/login?error=auth_callback_failed`)
+  const { search, hash } = new URL(request.url)
+  const destination = `/auth/confirm${search}${hash}`
+  return NextResponse.redirect(new URL(destination, request.url))
 }
