@@ -100,8 +100,8 @@ export function LoopBoard() {
 
   return (
     <>
-      <div className="overflow-x-auto">
-        <div className="flex gap-4 min-w-[800px]">
+      <div className="overflow-x-auto -mx-1 px-1">
+        <div className="flex gap-4 min-w-[720px] md:min-w-0 md:grid md:grid-cols-4">
           {COLUMNS.map(({ state, label, dot, count_color }) => {
             const items = loops.filter((l) => l.state === state)
             return (

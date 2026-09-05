@@ -139,9 +139,14 @@ export function LoopCard({ loop, onUpdate, onClose }: LoopCardProps) {
         <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1a1a1a] text-[#71717a] border border-[#2a2a2a]">
           {SOURCE_LABELS[loop.source] ?? loop.source}
         </span>
-        {loop.confidence < 0.9 && (
-          <span className="text-[10px] text-[#f59e0b]">
-            {Math.round(loop.confidence * 100)}% confident
+        {loop.nudge_count > 0 && (
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#ef4444]/10 text-[#ef4444] border border-[#ef4444]/20">
+            {loop.nudge_count} nudge{loop.nudge_count !== 1 ? 's' : ''}
+          </span>
+        )}
+        {loop.next_action && (
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#7c3aed]/10 text-[#8b5cf6] border border-[#7c3aed]/20 ml-auto">
+            draft ready
           </span>
         )}
       </div>
