@@ -77,7 +77,7 @@ function HeroVisual() {
       {[
         { state: 'overdue' as const, name: 'Rahul', desc: 'Send revised proposal PDF', when: '3 days overdue' },
         { state: 'due' as const, name: 'TechCorp HR', desc: 'Share interview feedback', when: 'Due today' },
-        { state: 'waiting' as const, name: 'Priya', desc: 'Confirm next week's meeting', when: 'Due in 2 days' },
+        { state: 'waiting' as const, name: 'Priya', desc: "Confirm next week's meeting", when: 'Due in 2 days' },
         { state: 'waiting' as const, name: 'Accountant', desc: 'Send Q3 tax docs', when: 'Due in 5 days' },
       ].map((item, i) => (
         <MiniCard key={i} {...item} />
