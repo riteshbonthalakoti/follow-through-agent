@@ -1,16 +1,18 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import Link from 'next/link'
 
 export default function LoginPage() {
+  const router = useRouter()
   const [email, setEmail] = useState('')
-  const [sent, setSent] = useState(false)
+  const [otp, setOtp] = useState('')
+  const [step, setStep] = useState<'email' | 'otp'>('email')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const sendOtp = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
@@ -18,37 +20,35 @@ export default function LoginPage() {
     const supabase = createClient()
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin}/auth/callback`,
-      },
+      options: { shouldCreateUser: true },
     })
 
     if (error) {
       setError(error.message)
     } else {
-      setSent(true)
+      setStep('otp')
     }
     setLoading(false)
   }
 
-  if (sent) {
-    return (
-      <main className="min-h-screen flex items-center justify-center px-6" style={{ backgroundColor: '#fafaf9' }}>
-        <div className="max-w-sm w-full text-center">
-          <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-5">
-            <span className="text-green-600 text-xl font-bold">✓</span>
-          </div>
-          <h1 className="text-xl font-semibold text-gray-900 mb-2">Check your email</h1>
-          <p className="text-gray-500 text-sm">
-            We sent a magic link to{' '}
-            <span className="text-gray-900 font-medium">{email}</span>. Click it to sign in.
-          </p>
-          <Link href="/" className="inline-block mt-6 text-sm text-violet-700 hover:underline">
-            ← Back to home
-          </Link>
-        </div>
-      </main>
-    )
+  const verifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
+    const supabase = createClient()
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: otp,
+      type: 'email',
+    })
+
+    if (error) {
+      setError(error.message)
+    } else {
+      router.replace('/dashboard')
+    }
+    setLoading(false)
   }
 
   return (
@@ -69,25 +69,67 @@ export default function LoginPage() {
         </div>
 
         <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
-          <h2 className="text-gray-900 font-semibold text-base mb-4">Sign in</h2>
-          <form onSubmit={handleLogin} className="space-y-3">
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              required
-              className="w-full px-3 py-2.5 rounded-lg bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-violet-500 transition-colors"
-            />
-            {error && <p className="text-red-600 text-xs">{error}</p>}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2.5 rounded-lg bg-violet-700 text-white text-sm font-medium hover:bg-violet-800 transition-colors disabled:opacity-50"
-            >
-              {loading ? 'Sending...' : 'Send Magic Link'}
-            </button>
-          </form>
+          {step === 'email' ? (
+            <>
+              <h2 className="text-gray-900 font-semibold text-base mb-1">Sign in</h2>
+              <p className="text-gray-400 text-xs mb-4">We'll send a 6-digit code to your email.</p>
+              <form onSubmit={sendOtp} className="space-y-3">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  required
+                  autoFocus
+                  className="w-full px-3 py-2.5 rounded-lg bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-violet-500 transition-colors"
+                />
+                {error && <p className="text-red-600 text-xs">{error}</p>}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-2.5 rounded-lg bg-violet-700 text-white text-sm font-medium hover:bg-violet-800 transition-colors disabled:opacity-50"
+                >
+                  {loading ? 'Sending…' : 'Send Code'}
+                </button>
+              </form>
+            </>
+          ) : (
+            <>
+              <h2 className="text-gray-900 font-semibold text-base mb-1">Check your email</h2>
+              <p className="text-gray-400 text-xs mb-4">
+                Enter the 6-digit code sent to <span className="text-gray-700 font-medium">{email}</span>.
+              </p>
+              <form onSubmit={verifyOtp} className="space-y-3">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]{6}"
+                  maxLength={6}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                  placeholder="123456"
+                  required
+                  autoFocus
+                  className="w-full px-3 py-2.5 rounded-lg bg-white border border-gray-300 text-gray-900 text-sm text-center tracking-widest font-mono placeholder-gray-400 focus:outline-none focus:border-violet-500 transition-colors"
+                />
+                {error && <p className="text-red-600 text-xs">{error}</p>}
+                <button
+                  type="submit"
+                  disabled={loading || otp.length !== 6}
+                  className="w-full py-2.5 rounded-lg bg-violet-700 text-white text-sm font-medium hover:bg-violet-800 transition-colors disabled:opacity-50"
+                >
+                  {loading ? 'Verifying…' : 'Sign In'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setStep('email'); setOtp(''); setError(null) }}
+                  className="w-full py-2 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  Use a different email
+                </button>
+              </form>
+            </>
+          )}
         </div>
 
         <p className="text-center text-xs text-gray-400 mt-6">
