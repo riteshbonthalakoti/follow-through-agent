@@ -62,70 +62,20 @@ function MiniCard({
   )
 }
 
-// ── Hero right column — CSS glassmorphism fallback ────────────────────────────
-
-const ORBS = [
-  { color: '#7c3aed', size: 340, top: '10%', left: '5%', delay: 0 },
-  { color: '#4f46e5', size: 260, top: '45%', left: '40%', delay: 1.5 },
-  { color: '#0ea5e9', size: 200, top: '20%', left: '55%', delay: 3 },
-]
+// ── Hero right column — Spline via iframe (no bundling issues) ───────────────
 
 function HeroVisual() {
   return (
-    <div className="w-full h-[460px] lg:h-[560px] relative overflow-hidden rounded-2xl">
-      {/* Blurred orbs */}
-      {ORBS.map((orb, i) => (
-        <motion.div
-          key={i}
-          className="absolute rounded-full opacity-30"
-          style={{
-            width: orb.size,
-            height: orb.size,
-            backgroundColor: orb.color,
-            filter: 'blur(80px)',
-            top: orb.top,
-            left: orb.left,
-          }}
-          animate={{ y: [0, -24, 0], x: [0, 12, 0] }}
-          transition={{ duration: 8 + i * 2, repeat: Infinity, ease: 'easeInOut', delay: orb.delay }}
-        />
-      ))}
-
-      {/* Glassmorphism cards on top */}
-      <div className="absolute inset-0 flex flex-col justify-center items-center gap-3 p-8">
-        {[
-          { state: 'overdue' as const, name: 'Rahul', desc: 'Send revised proposal PDF', when: 'Overdue 3 days' },
-          { state: 'due' as const, name: 'TechCorp HR', desc: 'Share interview feedback', when: 'Due today' },
-          { state: 'waiting' as const, name: 'Priya', desc: 'Confirm next week\'s meeting', when: 'Due in 2 days' },
-        ].map((card, i) => {
-          const s = STATE[card.state]
-          return (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.5 + i * 0.2 }}
-              className="w-full max-w-xs rounded-xl p-4 border"
-              style={{
-                backgroundColor: 'rgba(255,255,255,0.8)',
-                backdropFilter: 'blur(12px)',
-                borderColor: 'rgba(255,255,255,0.6)',
-                boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
-              }}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: s.dot }} />
-                  <span className="text-xs font-medium" style={{ color: s.text }}>{s.label}</span>
-                </div>
-                <span className="text-xs text-gray-400">{card.name}</span>
-              </div>
-              <p className="text-sm font-medium text-gray-900 mt-2">{card.desc}</p>
-              <p className="text-xs mt-1" style={{ color: s.text }}>{card.when}</p>
-            </motion.div>
-          )
-        })}
-      </div>
+    <div className="w-full h-[460px] lg:h-[560px] relative rounded-2xl overflow-hidden">
+      <iframe
+        src="https://my.spline.design/6Wq1Q7YGyM-iab9i/"
+        frameBorder="0"
+        width="100%"
+        height="100%"
+        title="Spline 3D scene"
+        loading="lazy"
+        style={{ border: 'none' }}
+      />
     </div>
   )
 }
