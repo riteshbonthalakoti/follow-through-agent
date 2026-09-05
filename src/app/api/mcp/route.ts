@@ -3,12 +3,23 @@ import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { MCP_TOOLS } from '@/lib/mcp/tools'
 import type { LoopState } from '@/types/loop'
 
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, X-MCP-Secret, Authorization',
+}
+
 function ok(id: unknown, result: unknown) {
-  return NextResponse.json({ jsonrpc: '2.0', id, result })
+  return NextResponse.json({ jsonrpc: '2.0', id, result }, { headers: CORS })
 }
 
 function err(id: unknown, code: number, message: string) {
-  return NextResponse.json({ jsonrpc: '2.0', id, error: { code, message } })
+  return NextResponse.json({ jsonrpc: '2.0', id, error: { code, message } }, { headers: CORS })
+}
+
+// OPTIONS — CORS preflight
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: CORS })
 }
 
 // GET — capability discovery (some MCP clients probe this)
@@ -17,7 +28,7 @@ export async function GET() {
     jsonrpc: '2.0',
     result: { tools: MCP_TOOLS },
     id: null,
-  })
+  }, { headers: CORS })
 }
 
 // POST — standard MCP JSON-RPC 2.0
