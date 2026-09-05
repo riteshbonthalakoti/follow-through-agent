@@ -80,11 +80,15 @@ const loops = [
   },
 ]
 
-const { data, error } = await supabase.from('loops').insert(loops).select()
+async function main() {
+  const { data, error } = await supabase.from('loops').insert(loops).select()
 
-if (error) {
-  console.error('Seed failed:', error.message)
-  process.exit(1)
+  if (error) {
+    console.error('Seed failed:', error.message)
+    process.exit(1)
+  }
+
+  console.log(`Seeded ${data?.length ?? 0} loops successfully`)
 }
 
-console.log(`Seeded ${data?.length ?? 0} loops successfully`)
+main()
