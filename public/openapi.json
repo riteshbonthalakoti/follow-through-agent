@@ -1,0 +1,105 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "FollowThrough Agent API",
+    "version": "1.0.0",
+    "description": "Manage follow-up loops — track commitments, update states, draft follow-ups."
+  },
+  "servers": [{ "url": "https://follow-through-agent.vercel.app" }],
+  "paths": {
+    "/api/loops": {
+      "get": {
+        "operationId": "listLoops",
+        "summary": "List all loops for a user",
+        "parameters": [
+          { "name": "owner_id", "in": "query", "required": true, "schema": { "type": "string" }, "description": "User ID to fetch loops for" },
+          { "name": "state", "in": "query", "required": false, "schema": { "type": "string", "enum": ["waiting","due","overdue","escalated","closed"] } }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of loops",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoopList" } } }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createLoop",
+        "summary": "Create a new loop",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateLoop" } } }
+        },
+        "responses": {
+          "200": { "description": "Created loop", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Loop" } } } }
+        }
+      }
+    },
+    "/api/loops/{id}/state": {
+      "patch": {
+        "operationId": "transitionLoopState",
+        "summary": "Transition a loop to a new state",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object", "properties": { "to": { "type": "string", "enum": ["waiting","due","overdue","escalated","closed"] } }, "required": ["to"] } } }
+        },
+        "responses": {
+          "200": { "description": "Updated loop", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Loop" } } } }
+        }
+      }
+    },
+    "/api/loops/{id}": {
+      "patch": {
+        "operationId": "updateLoop",
+        "summary": "Update loop fields (e.g. draft follow-up text)",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object", "properties": { "next_action": { "type": "string", "nullable": true }, "description": { "type": "string" } } } } }
+        },
+        "responses": {
+          "200": { "description": "Updated loop", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Loop" } } } }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Loop": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "owner_id": { "type": "string" },
+          "counterparty": { "type": "string" },
+          "description": { "type": "string" },
+          "state": { "type": "string", "enum": ["waiting","due","overdue","escalated","closed"] },
+          "next_action": { "type": "string", "nullable": true },
+          "expected_by": { "type": "string", "format": "date" },
+          "direction": { "type": "string", "enum": ["inbound","outbound"] },
+          "source": { "type": "string" },
+          "nudge_count": { "type": "integer" },
+          "last_action_at": { "type": "string", "format": "date-time" },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "LoopList": {
+        "type": "object",
+        "properties": {
+          "loops": { "type": "array", "items": { "$ref": "#/components/schemas/Loop" } },
+          "count": { "type": "integer" }
+        }
+      },
+      "CreateLoop": {
+        "type": "object",
+        "required": ["owner_id", "counterparty", "description", "expected_by"],
+        "properties": {
+          "owner_id": { "type": "string" },
+          "counterparty": { "type": "string" },
+          "description": { "type": "string" },
+          "expected_by": { "type": "string", "format": "date" },
+          "direction": { "type": "string", "enum": ["inbound","outbound"], "default": "outbound" }
+        }
+      }
+    }
+  }
+}
