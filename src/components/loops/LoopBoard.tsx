@@ -24,8 +24,8 @@ export function LoopBoard() {
   const fetchLoops = useCallback(async () => {
     const res = await fetch('/api/loops')
     if (res.ok) {
-      const data: Loop[] = await res.json()
-      setLoops(data.filter((l) => l.state !== 'closed'))
+      const { loops: data }: { loops: Loop[] } = await res.json()
+      setLoops((data ?? []).filter((l) => l.state !== 'closed'))
     }
     setLoading(false)
   }, [])
