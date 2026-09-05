@@ -1,347 +1,371 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { motion, useInView } from 'framer-motion'
 import Link from 'next/link'
+import Image from 'next/image'
+import { useRef, useEffect, useState } from 'react'
+import { ArrowRight, Zap, Mail, CheckCircle2, Download, Share, Plus } from 'lucide-react'
 
-// ── Shared animation helpers ──────────────────────────────────────────────────
+// ── Utilities ────────────────────────────────────────────────────────────────
 
-const slideIn = (i: number) => ({
-  initial: { opacity: 0, x: -20 },
-  animate: { opacity: 1, x: 0 },
-  transition: { duration: 0.5, delay: i * 0.15 },
-})
-
-const fadeUp = (i: number) => ({
-  initial: { opacity: 0, y: 20 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true },
-  transition: { duration: 0.45, delay: i * 0.08 },
-})
-
-// ── Mini loop card used inside bento ─────────────────────────────────────────
-
-const STATE = {
-  overdue: { dot: '#dc2626', label: 'Overdue', text: '#991b1b', bg: '#fee2e2' },
-  due: { dot: '#d97706', label: 'Due today', text: '#92400e', bg: '#fef3c7' },
-  waiting: { dot: '#2563eb', label: 'Waiting', text: '#1d4ed8', bg: '#dbeafe' },
-} as const
-
-function MiniCard({
-  state,
-  name,
-  desc,
-  when,
-}: {
-  state: keyof typeof STATE
-  name: string
-  desc: string
-  when: string
-}) {
-  const s = STATE[state]
-  return (
-    <div className="flex items-start gap-3 py-3 border-b border-gray-100 last:border-0">
-      <div className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: s.dot }} />
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-sm font-medium text-gray-900 truncate">{desc}</span>
-          <span
-            className="text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0"
-            style={{ color: s.text, backgroundColor: s.bg }}
-          >
-            {s.label}
-          </span>
-        </div>
-        <div className="flex items-center justify-between mt-0.5">
-          <span className="text-xs text-gray-400">{name}</span>
-          <span className="text-xs" style={{ color: s.text }}>
-            {when}
-          </span>
-        </div>
-      </div>
-    </div>
-  )
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
 }
 
-// ── Hero right column — animated loop board mock ─────────────────────────────
+function usePWA() {
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null)
+  const [isIOS, setIsIOS] = useState(false)
+  const [isInstalled, setIsInstalled] = useState(false)
 
-function HeroVisual() {
-  return (
-    <div className="w-full h-[460px] lg:h-[560px] relative rounded-2xl overflow-hidden bg-white border border-gray-200 shadow-sm flex flex-col p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-sm font-semibold text-gray-900">My Loops</span>
-        <span className="text-xs bg-violet-100 text-violet-700 font-medium px-2 py-0.5 rounded-full">3 need action</span>
-      </div>
+  useEffect(() => {
+    if (window.matchMedia('(display-mode: standalone)').matches) { setIsInstalled(true); return }
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent)
+    setIsIOS(ios)
+    const handler = (e: Event) => { e.preventDefault(); setInstallPrompt(e as BeforeInstallPromptEvent) }
+    window.addEventListener('beforeinstallprompt', handler)
+    return () => window.removeEventListener('beforeinstallprompt', handler)
+  }, [])
 
-      {/* Loop rows */}
-      {[
-        { state: 'overdue' as const, name: 'Rahul', desc: 'Send revised proposal PDF', when: '3 days overdue' },
-        { state: 'due' as const, name: 'TechCorp HR', desc: 'Share interview feedback', when: 'Due today' },
-        { state: 'waiting' as const, name: 'Priya', desc: "Confirm next week's meeting", when: 'Due in 2 days' },
-        { state: 'waiting' as const, name: 'Accountant', desc: 'Send Q3 tax docs', when: 'Due in 5 days' },
-      ].map((item, i) => (
-        <MiniCard key={i} {...item} />
-      ))}
+  const install = async () => {
+    if (!installPrompt) return
+    await installPrompt.prompt()
+    setInstallPrompt(null)
+  }
 
-      {/* Approval card */}
-      <div className="mt-4 bg-gray-50 border border-gray-200 rounded-xl p-4 flex-1">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-red-100 text-red-700">Rahul — Overdue</span>
-        </div>
-        <p className="text-xs text-gray-600 font-mono leading-relaxed mb-3">
-          Hi Rahul, following up on the proposal from last week. Could you let me know if you had a chance to review it?
-        </p>
-        <div className="flex gap-2">
-          <button className="flex-1 py-1.5 rounded-lg bg-violet-700 text-white text-xs font-medium">Approve & Send</button>
-          <button className="flex-1 py-1.5 rounded-lg border border-gray-300 text-gray-600 text-xs font-medium">Edit</button>
-        </div>
-      </div>
-    </div>
-  )
+  return { installPrompt, isIOS, isInstalled, install }
 }
 
-// ── Bento cards ───────────────────────────────────────────────────────────────
-
-function BentoCard({
-  children,
-  className = '',
-  violet = false,
-}: {
-  children: React.ReactNode
-  className?: string
-  violet?: boolean
-}) {
+function FadeUp({ children, delay = 0, className = '' }: { children: React.ReactNode; delay?: number; className?: string }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: '-60px' })
   return (
-    <div
-      className={`rounded-2xl p-6 ${violet ? '' : 'bg-white border border-gray-200 shadow-sm'} ${className}`}
-      style={violet ? { backgroundColor: '#f5f0ff' } : undefined}
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 24 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.5, delay, ease: [0.4, 0, 0.2, 1] }}
+      className={className}
     >
       {children}
+    </motion.div>
+  )
+}
+
+// ── Mini loop preview card ─────────────────────────────────────────────────
+
+const DEMO_LOOPS = [
+  { state: 'overdue', name: 'Rahul', desc: 'Send revised proposal PDF', when: '3 days overdue', dot: 'bg-red-400', badge: 'bg-red-50 text-red-600 border-red-100' },
+  { state: 'due',     name: 'TechCorp HR', desc: 'Share interview feedback', when: 'Due today',       dot: 'bg-amber-400', badge: 'bg-amber-50 text-amber-600 border-amber-100' },
+  { state: 'waiting', name: 'Priya',       desc: "Confirm next week's meeting", when: 'Due in 2 days',  dot: 'bg-blue-400', badge: 'bg-blue-50 text-blue-600 border-blue-100' },
+] as const
+
+function AppPreview() {
+  return (
+    <div className="relative w-full max-w-sm mx-auto">
+      {/* Phone shell */}
+      <div className="bg-white rounded-[2rem] border border-slate-200 shadow-2xl overflow-hidden">
+        {/* Status bar */}
+        <div className="bg-[#F7F6F3] px-6 pt-3 pb-2 flex items-center justify-between">
+          <span className="text-[10px] font-semibold text-slate-500">9:41</span>
+          <div className="flex gap-1">
+            <div className="w-1 h-1 rounded-full bg-slate-400" />
+            <div className="w-1 h-1 rounded-full bg-slate-400" />
+            <div className="w-1 h-1 rounded-full bg-slate-400" />
+          </div>
+        </div>
+
+        {/* App nav */}
+        <div className="bg-white border-b border-slate-100 px-4 py-3 flex items-center gap-2">
+          <Image src="/logo.svg" alt="" width={20} height={20} />
+          <span className="text-xs font-bold text-slate-800">FollowThrough</span>
+          <div className="ml-auto w-6 h-6 rounded-full bg-violet-600 flex items-center justify-center">
+            <Plus size={12} className="text-white" />
+          </div>
+        </div>
+
+        {/* Stats row */}
+        <div className="bg-[#F7F6F3] px-4 py-3 grid grid-cols-3 gap-2">
+          {[
+            { n: 1, label: 'Overdue', c: 'text-red-600' },
+            { n: 1, label: 'Due', c: 'text-amber-600' },
+            { n: 1, label: 'Waiting', c: 'text-blue-600' },
+          ].map(s => (
+            <div key={s.label} className="bg-white rounded-xl p-2 border border-slate-200 shadow-sm text-center">
+              <p className={`text-lg font-bold ${s.c}`}>{s.n}</p>
+              <p className="text-[9px] text-slate-400 font-medium">{s.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Loop cards */}
+        <div className="px-4 py-3 space-y-2 pb-4">
+          {DEMO_LOOPS.map((l, i) => (
+            <motion.div
+              key={l.name}
+              initial={{ opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 + i * 0.15, duration: 0.4 }}
+              className="bg-white rounded-xl border border-slate-200 p-3 shadow-sm relative overflow-hidden"
+            >
+              <div className={`absolute left-0 top-0 bottom-0 w-[3px] ${l.dot}`} />
+              <div className="pl-3">
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-xs font-semibold text-slate-800">{l.name}</p>
+                  <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full border ${l.badge}`}>{l.when}</span>
+                </div>
+                <p className="text-[10px] text-slate-400">{l.desc}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* Glow */}
+      <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-48 h-16 bg-violet-400/20 blur-2xl rounded-full" />
     </div>
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ── Feature pillars ───────────────────────────────────────────────────────────
+
+const FEATURES = [
+  { icon: CheckCircle2, title: 'Zero autonomous sends', body: 'Every follow-up is reviewed by you before it goes. You\'re always in control.', color: 'bg-green-50 text-green-600' },
+  { icon: Mail,         title: 'Gmail auto-detect',     body: 'Connect your inbox and watch open loops surface automatically using Gemini AI.', color: 'bg-blue-50 text-blue-600' },
+  { icon: Zap,          title: 'Instant nudge drafts',  body: 'When someone goes quiet, AI drafts the perfect follow-up in seconds.', color: 'bg-violet-50 text-violet-600' },
+]
+
+// ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
+  const { installPrompt, isIOS, isInstalled, install } = usePWA()
+
   return (
-    <main style={{ backgroundColor: '#fafaf9' }} className="overflow-x-hidden">
+    <main className="bg-[#F7F6F3] overflow-x-hidden">
 
-      {/* ── HERO ─────────────────────────────────────────────────────────── */}
-      <section className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
+      {/* ── NAV ────────────────────────────────────────────────────────── */}
+      <nav className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-slate-200/60 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center">
+          <Link href="/" className="flex items-center gap-2 mr-auto">
+            <Image src="/logo.svg" alt="FollowThrough" width={24} height={24} />
+            <span className="font-bold text-sm text-slate-900 tracking-tight">FollowThrough</span>
+          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/login"
+              className="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors px-3 py-1.5"
+            >
+              Sign in
+            </Link>
+            <Link
+              href="/login"
+              className="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-700 transition-colors shadow-sm"
+            >
+              Get started
+            </Link>
+          </div>
+        </div>
+      </nav>
 
+      {/* ── HERO ───────────────────────────────────────────────────────── */}
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 pt-16 pb-20 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         {/* Left */}
-        <div className="flex flex-col justify-center px-8 lg:px-16 py-20 max-w-xl lg:max-w-none">
-          <motion.p
-            {...slideIn(0)}
-            className="text-sm text-violet-700 font-medium tracking-wide uppercase"
+        <div>
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
           >
-            Open loops cost you deals, jobs, and money.
-          </motion.p>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-50 border border-violet-100 text-violet-700 text-xs font-semibold mb-5">
+              <Zap size={11} /> AI-powered follow-up tracking
+            </span>
+          </motion.div>
 
           <motion.h1
-            {...slideIn(1)}
-            className="mt-4 text-5xl lg:text-6xl font-bold text-gray-900 leading-[1.1]"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.55 }}
+            className="text-4xl sm:text-5xl font-bold text-slate-900 leading-[1.1] tracking-tight"
             style={{ fontFamily: 'var(--font-playfair)' }}
           >
-            Nothing falls
-            <br />
-            through the cracks.
+            Nothing falls<br />through the cracks.
           </motion.h1>
 
           <motion.p
-            {...slideIn(2)}
-            className="mt-6 max-w-md text-lg text-gray-500 leading-relaxed"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="mt-5 text-base text-slate-500 leading-relaxed max-w-md"
           >
-            Follow-Through Agent tracks what others owe you. It detects when someone
-            ghosts you, drafts the follow-up, and sends it only when you approve.
+            FollowThrough tracks what others owe you — proposals, callbacks, meetings. When someone ghosts you, AI drafts the nudge. You approve, it sends.
           </motion.p>
 
-          <motion.div {...slideIn(3)} className="mt-8 flex gap-3 items-center flex-wrap">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="mt-8 flex flex-col sm:flex-row gap-3"
+          >
             <Link
               href="/login"
-              className="px-5 py-2.5 rounded-lg bg-violet-700 text-white text-sm font-medium hover:bg-violet-800 transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-violet-600 text-white font-semibold hover:bg-violet-700 transition-colors shadow-md text-sm"
             >
-              Start tracking for free
+              Start free <ArrowRight size={15} />
             </Link>
-            <a
-              href="#demo"
-              className="text-sm text-gray-600 hover:text-gray-900 underline underline-offset-4 transition-colors"
-            >
-              See it live ↓
-            </a>
+
+            {/* PWA install button */}
+            {!isInstalled && (installPrompt || isIOS) && (
+              <button
+                onClick={isIOS ? undefined : install}
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border-2 border-slate-200 text-slate-700 font-semibold hover:bg-white hover:border-slate-300 transition-all text-sm"
+              >
+                {isIOS ? <><Share size={15} /> Add to Home Screen</> : <><Download size={15} /> Install App</>}
+              </button>
+            )}
           </motion.div>
 
-          <motion.p {...slideIn(4)} className="mt-8 text-xs text-gray-400">
-            Built at Lyzr Builder Hour · Powered by Supabase · Free to try
+          {isIOS && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="mt-3 text-xs text-slate-400 flex items-center gap-1.5"
+            >
+              <Share size={11} /> Tap Share → Add to Home Screen for the full app experience
+            </motion.p>
+          )}
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.45 }}
+            className="mt-5 text-xs text-slate-400"
+          >
+            Free to use · No credit card · Works offline
           </motion.p>
         </div>
 
-        {/* Right — Spline */}
-        <div className="hidden lg:flex items-center justify-center relative p-8">
-          <HeroVisual />
-        </div>
-      </section>
-
-      {/* ── SOCIAL PROOF BAR ─────────────────────────────────────────────── */}
-      <section className="py-10 border-y border-gray-200 bg-white">
-        <p className="text-base text-gray-500 text-center max-w-2xl mx-auto px-6">
-          The average professional has{' '}
-          <span className="text-gray-900 font-medium">23 open loops</span> at any time.
-          Most go unresolved. This fixes that.
-        </p>
-      </section>
-
-      {/* ── BENTO DEMO ───────────────────────────────────────────────────── */}
-      <section id="demo" className="py-20 bg-white">
-        <div className="max-w-5xl mx-auto px-6">
-          <h2
-            className="text-4xl font-bold text-gray-900 text-center"
-            style={{ fontFamily: 'var(--font-playfair)' }}
-          >
-            See it work.
-          </h2>
-          <p className="text-gray-500 text-center mt-2 mb-12">
-            Four interactions. That&apos;s the whole product.
-          </p>
-
-          <div className="grid grid-cols-12 gap-4">
-
-            {/* Card A — Loop board */}
-            <motion.div {...fadeUp(0)} className="col-span-12 lg:col-span-7">
-              <BentoCard className="min-h-[320px] flex flex-col">
-                <h3 className="font-semibold text-gray-900">Your loops, organized</h3>
-                <p className="text-sm text-gray-400 mt-1 mb-4">
-                  Everything waiting on someone, in one place.
-                </p>
-                <div className="flex-1">
-                  <MiniCard
-                    state="overdue"
-                    name="Rahul"
-                    desc="Send revised proposal PDF"
-                    when="Overdue 3 days"
-                  />
-                  <MiniCard
-                    state="due"
-                    name="TechCorp HR"
-                    desc="Share interview feedback"
-                    when="Due today"
-                  />
-                  <MiniCard
-                    state="waiting"
-                    name="Priya"
-                    desc="Confirm next week's meeting"
-                    when="Due in 2 days"
-                  />
-                </div>
-              </BentoCard>
-            </motion.div>
-
-            {/* Card B — Approval queue */}
-            <motion.div {...fadeUp(1)} className="col-span-12 lg:col-span-5">
-              <BentoCard className="min-h-[320px] flex flex-col gap-4">
-                <div>
-                  <h3 className="font-semibold text-gray-900">Approval queue</h3>
-                  <p className="text-sm text-gray-400 mt-1">
-                    Review the draft. Tap approve. Done.
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-red-100 text-red-700">
-                    Rahul — Overdue 3 days
-                  </span>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-3 text-xs text-gray-600 leading-relaxed font-mono border border-gray-200 flex-1">
-                  Hi Rahul, following up on the proposal from last week. Could you let me
-                  know if you had a chance to review it?
-                </div>
-                <div className="flex gap-2 mt-auto">
-                  <button className="flex-1 py-2 rounded-lg bg-violet-700 text-white text-xs font-medium hover:bg-violet-800 transition-colors">
-                    Approve &amp; Send
-                  </button>
-                  <button className="flex-1 py-2 rounded-lg border border-gray-300 text-gray-700 text-xs font-medium hover:bg-gray-50 transition-colors">
-                    Edit
-                  </button>
-                </div>
-              </BentoCard>
-            </motion.div>
-
-            {/* Card C — 100% */}
-            <motion.div {...fadeUp(2)} className="col-span-12 lg:col-span-4">
-              <BentoCard violet className="min-h-[200px] flex flex-col justify-between">
-                <h3 className="font-semibold text-gray-900">Zero autonomous sends</h3>
-                <div className="text-4xl font-bold text-violet-700 my-3">100%</div>
-                <p className="text-sm text-gray-500">
-                  Every follow-up is reviewed and approved by you first.
-                </p>
-              </BentoCard>
-            </motion.div>
-
-            {/* Card D — 30s */}
-            <motion.div {...fadeUp(3)} className="col-span-12 lg:col-span-4">
-              <BentoCard className="min-h-[200px] flex flex-col justify-between">
-                <h3 className="font-semibold text-gray-900">Logs in &lt; 30 seconds</h3>
-                <div className="text-4xl font-bold text-gray-900 my-3">30s</div>
-                <p className="text-sm text-gray-500">
-                  Add a loop by voice, text, or connected Gmail.
-                </p>
-              </BentoCard>
-            </motion.div>
-
-            {/* Card E — Lyzr */}
-            <motion.div {...fadeUp(4)} className="col-span-12 lg:col-span-4">
-              <BentoCard className="min-h-[200px] flex flex-col justify-between">
-                <h3 className="font-semibold text-gray-900">Built on Lyzr AI</h3>
-                <div className="text-2xl font-bold text-violet-700 my-3">Lyzr</div>
-                <p className="text-sm text-gray-500">
-                  Powered by{' '}
-                  <span className="text-violet-700 font-semibold">Lyzr&apos;s</span>{' '}
-                  agent platform for reliable, credit-efficient AI execution.
-                </p>
-              </BentoCard>
-            </motion.div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* ── CTA ──────────────────────────────────────────────────────────── */}
-      <section className="py-20 px-6" style={{ backgroundColor: '#fafaf9' }}>
-        <h2
-          className="text-4xl font-bold text-gray-900 text-center"
-          style={{ fontFamily: 'var(--font-playfair)' }}
+        {/* Right — app preview */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.25, duration: 0.6 }}
+          className="flex justify-center"
         >
-          Your loops won&apos;t chase themselves.
-        </h2>
-        <p className="text-gray-500 text-center mt-3 max-w-lg mx-auto">
-          Start free. No card required. Built for freelancers, job-seekers, and anyone
-          with too many open commitments.
+          <AppPreview />
+        </motion.div>
+      </section>
+
+      {/* ── SOCIAL PROOF ───────────────────────────────────────────────── */}
+      <section className="border-y border-slate-200 bg-white py-8 px-4">
+        <p className="text-sm text-slate-500 text-center max-w-lg mx-auto">
+          The average professional has{' '}
+          <span className="text-slate-900 font-semibold">23 open loops</span> at any time.
+          Most go unresolved. FollowThrough fixes that.
         </p>
-        <div className="flex justify-center mt-8">
-          <Link
-            href="/login"
-            className="px-6 py-3 rounded-lg bg-violet-700 text-white font-medium hover:bg-violet-800 transition-colors"
-          >
-            Get Started Free →
-          </Link>
+      </section>
+
+      {/* ── FEATURES ────────────────────────────────────────────────────── */}
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-20">
+        <FadeUp className="text-center mb-12">
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
+            How it works
+          </h2>
+          <p className="text-slate-400 mt-3 text-sm max-w-md mx-auto">Three things. That&apos;s the whole product.</p>
+        </FadeUp>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {FEATURES.map(({ icon: Icon, title, body, color }, i) => (
+            <FadeUp key={title} delay={i * 0.1}>
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 h-full hover:shadow-md transition-shadow">
+                <div className={`w-10 h-10 rounded-xl ${color} flex items-center justify-center mb-4`}>
+                  <Icon size={18} />
+                </div>
+                <h3 className="font-bold text-slate-800 text-sm mb-2">{title}</h3>
+                <p className="text-xs text-slate-400 leading-relaxed">{body}</p>
+              </div>
+            </FadeUp>
+          ))}
         </div>
       </section>
 
-      {/* ── FOOTER ───────────────────────────────────────────────────────── */}
-      <footer className="border-t border-gray-200 bg-white py-8 px-6">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2">
-          <span className="text-sm font-semibold text-gray-900">FollowThrough</span>
-          <span className="text-sm text-gray-400">
-            Built at Lyzr Builder Hour · open source on{' '}
-            <a
-              href="https://github.com/riteshbonthalakoti/follow-through-agent"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline underline-offset-2 hover:text-gray-600 transition-colors"
+      {/* ── APPROVAL DEMO ───────────────────────────────────────────────── */}
+      <section className="bg-white border-y border-slate-200 py-20 px-4 sm:px-6">
+        <FadeUp className="max-w-2xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 text-center mb-10 tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
+            Review, then send
+          </h2>
+          <div className="bg-[#F7F6F3] rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+            {/* Card header */}
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-200 bg-white">
+              <div className="w-9 h-9 rounded-full bg-red-100 text-red-600 font-bold text-sm flex items-center justify-center">R</div>
+              <div>
+                <p className="text-sm font-bold text-slate-900">Rahul · Proposal follow-up</p>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-100">3 days overdue</span>
+              </div>
+              <div className="ml-auto flex items-center gap-1 text-[10px] font-medium text-violet-500">
+                <Zap size={10} /> AI draft
+              </div>
+            </div>
+            {/* Draft */}
+            <div className="px-5 py-4">
+              <div className="bg-white rounded-xl border border-slate-200 p-4 text-sm text-slate-700 font-mono leading-relaxed shadow-sm">
+                Hi Rahul, just following up on the proposal I sent last week. Do you have any questions or would you like to set up a quick call to discuss?
+              </div>
+            </div>
+            {/* Actions */}
+            <div className="px-5 pb-5 flex gap-3">
+              <button className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-900 text-white text-sm font-semibold shadow-sm">
+                <CheckCircle2 size={14} /> Approve &amp; Send
+              </button>
+              <button className="px-5 py-3 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold">Edit</button>
+            </div>
+          </div>
+        </FadeUp>
+      </section>
+
+      {/* ── CTA ─────────────────────────────────────────────────────────── */}
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-20 text-center">
+        <FadeUp>
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4 tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
+            Your loops won&apos;t chase themselves.
+          </h2>
+          <p className="text-slate-400 text-sm mb-8 max-w-sm mx-auto">Free forever · No card · Installs like a native app</p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-2xl bg-violet-600 text-white font-bold hover:bg-violet-700 transition-colors shadow-lg text-sm"
             >
+              Get started free <ArrowRight size={15} />
+            </Link>
+            {!isInstalled && (installPrompt || isIOS) && (
+              <button
+                onClick={isIOS ? undefined : install}
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl border-2 border-slate-200 text-slate-700 font-semibold hover:bg-white transition-all text-sm"
+              >
+                {isIOS ? <><Share size={14} /> Add to Home Screen</> : <><Download size={14} /> Install PWA</>}
+              </button>
+            )}
+          </div>
+        </FadeUp>
+      </section>
+
+      {/* ── FOOTER ──────────────────────────────────────────────────────── */}
+      <footer className="border-t border-slate-200 bg-white py-8 px-4 sm:px-6">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Image src="/logo.svg" alt="" width={18} height={18} />
+            <span className="text-sm font-bold text-slate-700">FollowThrough</span>
+          </div>
+          <p className="text-xs text-slate-400 text-center">
+            Built with Lyzr AI · Supabase · Gemini · Open source on{' '}
+            <a href="https://github.com/riteshbonthalakoti/follow-through-agent" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-slate-600">
               GitHub
             </a>
-          </span>
+          </p>
+          <Link href="/login" className="text-xs text-violet-600 font-semibold hover:text-violet-700">
+            Sign in →
+          </Link>
         </div>
       </footer>
     </main>

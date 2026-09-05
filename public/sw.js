@@ -1,55 +1,90 @@
-const CACHE_NAME = 'followthrough-v2'
-const STATIC_ASSETS = [
-  '/manifest.json',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png',
-]
+// FollowThrough Service Worker v3
+const CACHE = 'ft-v3'
+const OFFLINE_URL = '/offline'
+const STATIC = ['/offline', '/manifest.json', '/icons/icon-192x192.png', '/icons/icon-512x512.png', '/apple-touch-icon.png', '/logo.svg']
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
+// ── Install ────────────────────────────────────────────────────────────────────
+self.addEventListener('install', e => {
+  e.waitUntil(
+    caches.open(CACHE).then(c => c.addAll(STATIC)).then(() => self.skipWaiting())
   )
-  self.skipWaiting()
 })
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-    )
+// ── Activate ───────────────────────────────────────────────────────────────────
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
   )
-  self.clients.claim()
 })
 
-self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url)
+// ── Fetch ──────────────────────────────────────────────────────────────────────
+self.addEventListener('fetch', e => {
+  const { request } = e
+  const url = new URL(request.url)
 
-  // Always network-first for API and HTML navigation — never serve stale auth redirects
-  if (
-    url.pathname.startsWith('/api/') ||
-    event.request.mode === 'navigate'
-  ) {
-    event.respondWith(
-      fetch(event.request).catch(() => {
-        // Offline fallback for navigation: return cached landing page
-        return caches.match('/') || new Response('Offline — open the app when connected.', { status: 503 })
-      })
+  // Skip non-GET and cross-origin
+  if (request.method !== 'GET' || url.origin !== self.location.origin) return
+
+  // API: network-only with offline fallback JSON
+  if (url.pathname.startsWith('/api/')) {
+    e.respondWith(
+      fetch(request).catch(() =>
+        new Response(JSON.stringify({ error: 'offline' }), {
+          status: 503,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      )
     )
     return
   }
 
-  // Cache-first for static assets (images, fonts, icons)
-  if (url.origin === self.location.origin) {
-    event.respondWith(
-      caches.match(event.request).then((cached) => {
-        if (cached) return cached
-        return fetch(event.request).then((response) => {
-          if (response.ok) {
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, response.clone()))
+  // Navigation: network-first, offline page fallback
+  if (request.mode === 'navigate') {
+    e.respondWith(
+      fetch(request)
+        .then(res => {
+          // Cache successful navigations for offline
+          if (res.ok) {
+            const clone = res.clone()
+            caches.open(CACHE).then(c => c.put(request, clone))
           }
-          return response
+          return res
         })
-      })
+        .catch(() => caches.match(OFFLINE_URL) || caches.match('/'))
     )
+    return
   }
+
+  // Static assets: cache-first, update in background (stale-while-revalidate)
+  e.respondWith(
+    caches.match(request).then(cached => {
+      const networkFetch = fetch(request).then(res => {
+        if (res.ok) caches.open(CACHE).then(c => c.put(request, res.clone()))
+        return res
+      })
+      return cached || networkFetch
+    })
+  )
+})
+
+// ── Push notifications (future) ────────────────────────────────────────────────
+self.addEventListener('push', e => {
+  if (!e.data) return
+  const { title, body, url } = e.data.json()
+  e.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/icon-192x192.png',
+      data: { url },
+      vibrate: [100, 50, 100],
+    })
+  )
+})
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close()
+  e.waitUntil(clients.openWindow(e.notification.data?.url || '/dashboard'))
 })

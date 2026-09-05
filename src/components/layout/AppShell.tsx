@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useState, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 import { AddLoopDialog } from '@/components/loops/AddLoopDialog'
+import { PageTransition } from '@/components/PageTransition'
 
 interface GmailStatus {
   connected: boolean
@@ -187,7 +188,7 @@ export function AppShell({ userEmail, children }: AppShellProps) {
 
       {/* Page */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-7 pb-24 md:pb-10">
-        {children}
+        <PageTransition>{children}</PageTransition>
       </main>
 
       {/* Mobile bottom nav */}

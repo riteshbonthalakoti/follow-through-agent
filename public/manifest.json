@@ -1,25 +1,33 @@
 {
-  "name": "Follow-Through Agent",
+  "name": "FollowThrough",
   "short_name": "FollowThrough",
-  "description": "The AI that owns your open loops",
-  "theme_color": "#0f0f0f",
-  "background_color": "#0f0f0f",
+  "description": "Track what others owe you. AI drafts the nudge — you approve it.",
+  "theme_color": "#F7F6F3",
+  "background_color": "#F7F6F3",
   "display": "standalone",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
   "scope": "/",
-  "start_url": "/",
+  "start_url": "/dashboard",
+  "categories": ["productivity", "business"],
+  "screenshots": [],
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
     },
     {
       "src": "/icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
