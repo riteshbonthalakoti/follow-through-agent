@@ -4,268 +4,258 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { CircleDot, Clock, CheckCircle } from 'lucide-react'
 
-const fadeUp = (delay = 0) => ({
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.6, delay },
-})
-
-const fadeDown = (delay = 0) => ({
-  initial: { opacity: 0, y: -10 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.5, delay },
-})
-
-const words1 = ['Stop', 'chasing.']
-const words2 = ['Let', 'AI', 'do', 'it.']
-
-const floatAnim = (delay = 0) => ({
-  animate: { y: [0, -8, 0] },
-  transition: { duration: 4, repeat: Infinity, ease: 'easeInOut', delay },
-})
+const stateStyles = {
+  overdue: { dot: '#dc2626', bg: '#fee2e2', text: '#991b1b', label: 'Overdue' },
+  due: { dot: '#d97706', bg: '#fef3c7', text: '#92400e', label: 'Due today' },
+  waiting: { dot: '#2563eb', bg: '#dbeafe', text: '#1d4ed8', label: 'Waiting' },
+}
 
 function MockCard({
-  name,
-  task,
   state,
-  color,
-  rotate,
-  delay,
-  floatDelay,
+  counterparty,
+  description,
+  dueLabel,
+  index,
+  float,
 }: {
-  name: string
-  task: string
-  state: string
-  color: string
-  rotate: string
-  delay: number
-  floatDelay: number
+  state: keyof typeof stateStyles
+  counterparty: string
+  description: string
+  dueLabel: string
+  index: number
+  float?: boolean
 }) {
+  const s = stateStyles[state]
+  const card = (
+    <div
+      className="bg-white rounded-xl p-4 w-72 border border-gray-200"
+      style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
+    >
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: s.dot }} />
+          <span className="text-xs font-medium" style={{ color: s.text }}>
+            {s.label}
+          </span>
+        </div>
+        <span className="text-xs text-gray-400">{counterparty}</span>
+      </div>
+      <p className="text-sm font-medium text-gray-900 mb-2">{description}</p>
+      <p className="text-xs" style={{ color: s.text }}>
+        {dueLabel}
+      </p>
+    </div>
+  )
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay }}
-      style={{ transform: `rotate(${rotate})` }}
-      className="relative"
+      initial={{ opacity: 0, x: 30 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.5, delay: 0.4 + index * 0.2 }}
+      style={{ marginTop: index > 0 ? '-8px' : 0 }}
     >
-      <motion.div
-        animate={{ y: [0, -8, 0] }}
-        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: floatDelay }}
-        className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-4 w-64 shadow-2xl"
-      >
-        <div className="flex items-center gap-2 mb-2">
-          <div className={`w-2 h-2 rounded-full ${color}`} />
-          <span className="text-white text-sm font-medium">{name}</span>
-        </div>
-        <p className="text-zinc-400 text-xs">{task}</p>
-        <div className="mt-3 text-[10px] text-zinc-600 uppercase tracking-wider">{state}</div>
-      </motion.div>
+      {float ? (
+        <motion.div
+          animate={{ y: [0, -6, 0] }}
+          transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          {card}
+        </motion.div>
+      ) : (
+        card
+      )}
     </motion.div>
   )
 }
 
+const steps = [
+  {
+    num: '01',
+    icon: <CircleDot className="w-5 h-5 text-violet-600" />,
+    title: 'Log the loop',
+    body: 'Add who owes you what and by when — by voice, text, or connecting your Gmail.',
+  },
+  {
+    num: '02',
+    icon: <Clock className="w-5 h-5 text-amber-500" />,
+    title: 'Agent monitors silently',
+    body: 'It watches for replies. No noise unless something is genuinely overdue.',
+  },
+  {
+    num: '03',
+    icon: <CheckCircle className="w-5 h-5 text-green-600" />,
+    title: 'You approve. It chases.',
+    body: "A draft follow-up lands in your queue. One tap sends it. You're always in control.",
+  },
+]
+
+const stats = [
+  { value: '0', label: 'emails sent without your approval' },
+  { value: '< 30s', label: 'to log a new open commitment' },
+  { value: '100%', label: 'of follow-ups reviewed before sending' },
+]
+
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-white overflow-x-hidden">
+    <main className="min-h-screen bg-white overflow-x-hidden">
       {/* HERO */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 text-center">
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(124,58,237,0.15), transparent)',
-          }}
-        />
+      <section className="min-h-screen flex items-center px-6 py-20">
+        <div className="max-w-5xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+          {/* Left */}
+          <div>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.4 }}
+              className="text-sm text-violet-700 font-medium mb-4"
+            >
+              Trusted by freelancers &amp; job-seekers
+            </motion.p>
 
-        {/* Badge */}
-        <motion.div {...fadeDown(0)} className="mb-8">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-violet-500/30 bg-violet-500/10 text-violet-400 text-xs">
-            ✦ Built at Lyzr Builder Hour
-          </span>
-        </motion.div>
+            <motion.h1
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="text-5xl font-bold tracking-tight text-gray-900 leading-tight"
+            >
+              The AI that tracks
+              <br />
+              what others owe you.
+            </motion.h1>
 
-        {/* Headline */}
-        <div className="mb-6">
-          <div className="flex justify-center gap-3 flex-wrap text-6xl font-bold mb-2">
-            {words1.map((word, i) => (
-              <motion.span
-                key={word}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 + i * 0.1 }}
-                className="text-white"
+            <motion.p
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="text-lg text-gray-500 max-w-md mt-4"
+            >
+              Follow-Through Agent monitors your open commitments, detects when someone goes quiet,
+              and drafts the follow-up — all you do is approve.
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="flex gap-3 flex-wrap mt-8"
+            >
+              <Link
+                href="/login"
+                className="px-5 py-2.5 rounded-lg bg-violet-700 text-white text-sm font-medium hover:bg-violet-800 transition-colors"
               >
-                {word}
-              </motion.span>
-            ))}
-          </div>
-          <div className="flex justify-center gap-3 flex-wrap text-6xl font-bold">
-            {words2.map((word, i) => (
-              <motion.span
-                key={word}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 + i * 0.1 }}
-                style={{
-                  background: 'linear-gradient(135deg, #7c3aed, #a78bfa, #c4b5fd)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}
+                Get Started Free
+              </Link>
+              <a
+                href="#how-it-works"
+                className="px-5 py-2.5 rounded-lg bg-white text-gray-700 border border-gray-300 text-sm font-medium hover:bg-gray-50 transition-colors"
               >
-                {word}
-              </motion.span>
-            ))}
+                See how it works ↓
+              </a>
+            </motion.div>
+
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.4, delay: 0.4 }}
+              className="text-sm text-gray-400 mt-6"
+            >
+              ★★★★★&nbsp; Built at Lyzr Builder Hour · No card required
+            </motion.p>
           </div>
-        </div>
 
-        {/* Subheadline */}
-        <motion.p
-          {...fadeUp(0.6)}
-          className="text-xl text-zinc-400 max-w-lg text-center mb-8"
-        >
-          Follow-Through Agent tracks what others owe you and autonomously chases them — so nothing
-          falls through the cracks.
-        </motion.p>
-
-        {/* CTAs */}
-        <motion.div {...fadeUp(0.8)} className="flex gap-4 flex-wrap justify-center mb-16">
-          <Link
-            href="/login"
-            className="px-6 py-3 rounded-lg bg-violet-600 hover:bg-violet-500 font-medium transition-colors"
-          >
-            Get Started →
-          </Link>
-          <a
-            href="#how-it-works"
-            className="px-6 py-3 rounded-lg border border-zinc-800 hover:border-zinc-600 text-zinc-300 transition-colors"
-          >
-            See how it works
-          </a>
-        </motion.div>
-
-        {/* Floating cards */}
-        <div className="flex items-end justify-center gap-4 flex-wrap">
-          <MockCard
-            name="Rahul · Overdue 3 days"
-            task="Send revised proposal PDF"
-            state="● Overdue"
-            color="bg-red-500"
-            rotate="-2deg"
-            delay={1.0}
-            floatDelay={0}
-          />
-          <MockCard
-            name="TechCorp HR · Due today"
-            task="Share interview feedback"
-            state="● Due today"
-            color="bg-amber-500"
-            rotate="0deg"
-            delay={1.2}
-            floatDelay={0.5}
-          />
-          <MockCard
-            name="Priya · Waiting"
-            task="Confirm meeting time"
-            state="● Waiting"
-            color="bg-blue-500"
-            rotate="2deg"
-            delay={1.4}
-            floatDelay={1.0}
-          />
+          {/* Right — mock cards */}
+          <div className="hidden md:flex flex-col items-start gap-0">
+            <MockCard
+              state="overdue"
+              counterparty="Rahul"
+              description="Send revised proposal PDF"
+              dueLabel="Overdue 3 days"
+              index={0}
+              float
+            />
+            <MockCard
+              state="due"
+              counterparty="TechCorp HR"
+              description="Share interview feedback"
+              dueLabel="Due today"
+              index={1}
+            />
+            <MockCard
+              state="waiting"
+              counterparty="Priya"
+              description="Confirm next week's meeting"
+              dueLabel="Due in 2 days"
+              index={2}
+            />
+          </div>
         </div>
       </section>
 
       {/* HOW IT WORKS */}
-      <section id="how-it-works" className="py-24 px-6">
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="text-3xl font-bold text-white text-center mb-12"
-        >
-          Three steps. Zero chasing.
-        </motion.h2>
+      <section id="how-it-works" className="py-20 px-6 bg-gray-50">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-3xl font-bold text-gray-900 text-center">
+            Three steps. Zero chasing.
+          </h2>
+          <p className="text-gray-500 text-center mt-2 mb-12">
+            No more mental overhead of remembering who owes you what.
+          </p>
 
-        <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            {
-              icon: <CircleDot className="w-6 h-6 text-violet-400" />,
-              title: 'Log the loop',
-              desc: 'Tell it who owes you what and by when. Voice, text, or email.',
-            },
-            {
-              icon: <Clock className="w-6 h-6 text-amber-400" />,
-              title: 'Agent monitors silently',
-              desc: "It watches for replies. No noise until something's actually overdue.",
-            },
-            {
-              icon: <CheckCircle className="w-6 h-6 text-green-400" />,
-              title: 'You approve. It sends.',
-              desc: 'Draft follow-ups land in your queue. One tap to chase.',
-            },
-          ].map((step, i) => (
-            <motion.div
-              key={step.title}
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.15 }}
-              className="bg-[#111111] border border-[#1a1a1a] rounded-xl p-6"
-            >
-              <div className="mb-4">{step.icon}</div>
-              <h3 className="text-white font-semibold mb-2">{step.title}</h3>
-              <p className="text-zinc-500 text-sm">{step.desc}</p>
-            </motion.div>
-          ))}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {steps.map((step, i) => (
+              <motion.div
+                key={step.num}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                className="bg-white rounded-xl p-6 border border-gray-100 relative overflow-hidden"
+                style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
+              >
+                <div className="text-4xl font-bold text-violet-100 absolute top-4 left-4 select-none leading-none">
+                  {step.num}
+                </div>
+                <div className="relative mt-6 mb-4">{step.icon}</div>
+                <h3 className="text-gray-900 font-semibold mb-2">{step.title}</h3>
+                <p className="text-sm text-gray-500">{step.body}</p>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* STATS */}
-      <section className="py-16 bg-[#0f0f0f] px-6">
-        <div className="max-w-3xl mx-auto flex flex-col md:flex-row items-center justify-center gap-0">
-          {[
-            { value: '10x', desc: 'more follow-through than manual tracking' },
-            { value: '< 30s', desc: 'to log a new open loop' },
-            { value: '0', desc: 'emails sent without your approval' },
-          ].map((stat, i) => (
-            <div key={stat.value} className="flex items-center">
-              <div className="text-center px-10 py-6">
-                <div className="text-4xl font-bold text-violet-400 mb-1">{stat.value}</div>
-                <div className="text-sm text-zinc-500">{stat.desc}</div>
-              </div>
-              {i < 2 && <div className="hidden md:block w-px h-12 bg-zinc-800" />}
+      <section className="py-16 px-6 bg-white">
+        <div className="max-w-3xl mx-auto flex flex-col md:flex-row items-center justify-center divide-y md:divide-y-0 md:divide-x divide-gray-200">
+          {stats.map((stat) => (
+            <div key={stat.value} className="text-center px-12 py-6">
+              <div className="text-4xl font-bold text-gray-900 mb-1">{stat.value}</div>
+              <div className="text-sm text-gray-500">{stat.label}</div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* CTA BOTTOM */}
-      <section className="py-24 px-6 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-        >
-          <h2 className="text-3xl font-bold text-white">Your open loops are waiting.</h2>
-          <p className="text-zinc-400 mt-2 mb-8">Start closing them today.</p>
+      {/* CTA */}
+      <section className="py-20 px-6 bg-violet-700 text-center">
+        <h2 className="text-3xl font-bold text-white">Ready to close your open loops?</h2>
+        <p className="text-violet-200 mt-2">Free to start. No credit card required.</p>
+        <div className="mt-8">
           <Link
             href="/login"
-            className="px-8 py-4 rounded-lg bg-violet-600 hover:bg-violet-500 font-medium text-lg transition-colors"
+            className="inline-block px-6 py-3 rounded-lg bg-white text-violet-700 font-medium hover:bg-violet-50 transition-colors"
           >
             Get Started Free →
           </Link>
-        </motion.div>
+        </div>
       </section>
 
       {/* FOOTER */}
-      <footer className="border-t border-zinc-900 py-8 px-6 flex flex-col md:flex-row items-center justify-between max-w-5xl mx-auto">
-        <span className="text-violet-400 font-semibold">FollowThrough</span>
-        <span className="text-zinc-600 text-sm mt-2 md:mt-0">
-          Built with Lyzr · Supabase · Vercel
-        </span>
+      <footer className="border-t border-gray-200 py-8 px-6 bg-white">
+        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-2">
+          <span className="text-sm font-semibold text-gray-900">FollowThrough</span>
+          <span className="text-sm text-gray-400">Built with Lyzr · Supabase · Vercel</span>
+        </div>
       </footer>
     </main>
   )

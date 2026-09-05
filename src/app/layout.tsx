@@ -29,7 +29,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} h-full`}>
-      <body className="min-h-full bg-[#0a0a0a] text-[#f5f5f5] antialiased">
+      <body className="min-h-full bg-white text-[#111827] antialiased">
         {children}
         <Toaster theme="dark" position="bottom-right" />
         <PWAInstall />

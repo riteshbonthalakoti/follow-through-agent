@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import Link from 'next/link'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -32,34 +33,41 @@ export default function LoginPage() {
 
   if (sent) {
     return (
-      <main className="min-h-screen flex items-center justify-center px-6 bg-[#0a0a0a]">
+      <main className="min-h-screen flex items-center justify-center px-6 bg-gray-50">
         <div className="max-w-sm w-full text-center">
-          <div className="w-12 h-12 rounded-full bg-[#22c55e]/10 flex items-center justify-center mx-auto mb-5">
-            <span className="text-[#22c55e] text-xl">✓</span>
+          <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-5">
+            <span className="text-green-600 text-xl">✓</span>
           </div>
-          <h1 className="text-xl font-semibold text-[#f5f5f5] mb-2">Check your email</h1>
-          <p className="text-[#71717a] text-sm">
-            We sent a magic link to <span className="text-[#f5f5f5]">{email}</span>. Click it to sign in.
+          <h1 className="text-xl font-semibold text-gray-900 mb-2">Check your email</h1>
+          <p className="text-gray-500 text-sm">
+            We sent a magic link to <span className="text-gray-900 font-medium">{email}</span>.
+            Click it to sign in.
           </p>
+          <Link href="/" className="inline-block mt-6 text-sm text-violet-700 hover:underline">
+            ← Back to home
+          </Link>
         </div>
       </main>
     )
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-6 bg-[#0a0a0a]">
+    <main className="min-h-screen flex items-center justify-center px-6 bg-gray-50">
       <div className="max-w-sm w-full">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-12 h-12 rounded-full bg-[#7c3aed] flex items-center justify-center mx-auto mb-4">
+          <div className="w-12 h-12 rounded-full bg-violet-700 flex items-center justify-center mx-auto mb-4">
             <span className="text-white text-xl font-bold">F</span>
           </div>
-          <h1 className="text-xl font-semibold text-[#f5f5f5]">FollowThrough</h1>
-          <p className="text-[#71717a] text-sm mt-1">The AI that owns your open loops</p>
+          <h1 className="text-xl font-semibold text-gray-900">FollowThrough</h1>
+          <p className="text-gray-500 text-sm mt-1">The AI that tracks what others owe you</p>
         </div>
 
-        <div className="bg-[#111111] border border-[#1a1a1a] rounded-lg p-6">
-          <h2 className="text-[#f5f5f5] font-medium text-base mb-4">Sign in</h2>
+        <div
+          className="bg-white rounded-xl p-6 border border-gray-200"
+          style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
+        >
+          <h2 className="text-gray-900 font-semibold text-base mb-4">Sign in</h2>
           <form onSubmit={handleLogin} className="space-y-3">
             <input
               type="email"
@@ -67,18 +75,22 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               required
-              className="w-full px-3 py-2.5 rounded-lg bg-[#0a0a0a] border border-[#1a1a1a] text-[#f5f5f5] text-sm placeholder-[#71717a] focus:outline-none focus:border-[#7c3aed] transition-colors"
+              className="w-full px-3 py-2.5 rounded-lg bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-violet-500 transition-colors"
             />
-            {error && <p className="text-[#ef4444] text-xs">{error}</p>}
+            {error && <p className="text-red-600 text-xs">{error}</p>}
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 rounded-lg bg-[#7c3aed] text-white text-sm font-medium hover:bg-[#6d28d9] transition-colors disabled:opacity-50"
+              className="w-full py-2.5 rounded-lg bg-violet-700 text-white text-sm font-medium hover:bg-violet-800 transition-colors disabled:opacity-50"
             >
               {loading ? 'Sending...' : 'Send Magic Link'}
             </button>
           </form>
         </div>
+
+        <p className="text-center text-xs text-gray-400 mt-6">
+          No password needed · No credit card required
+        </p>
       </div>
     </main>
   )
