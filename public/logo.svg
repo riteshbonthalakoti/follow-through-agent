@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
+  <!-- Outer ring arc (open loop → closing) -->
+  <circle cx="20" cy="20" r="16" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="80 20" stroke-dashoffset="-5"/>
+  <!-- Arrow tip at closing end -->
+  <path d="M33 14.5 L36 17 L33 19.5" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Checkmark in center -->
+  <path d="M13 20 L18 25 L27 15" stroke="#a78bfa" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,15 +1,16 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
-import { LayoutDashboard, CheckCircle, RefreshCw, LogOut } from 'lucide-react'
+import { LayoutDashboard, CheckCircle, LogOut } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
+import { GmailConnect } from '@/components/gmail/GmailConnect'
 
 const NAV_LINKS = [
   { href: '/dashboard', label: 'Loop Board', icon: LayoutDashboard },
   { href: '/approvals', label: 'Approvals', icon: CheckCircle },
-  { href: '/dashboard?scan=1', label: 'Run Scan', icon: RefreshCw },
 ]
 
 interface SidebarProps {
@@ -33,9 +34,7 @@ export function Sidebar({ userEmail }: SidebarProps) {
       {/* Desktop sidebar */}
       <aside className="hidden md:flex w-60 shrink-0 flex-col bg-[#0f0f0f] border-r border-[#1a1a1a]">
         <div className="flex items-center gap-3 px-5 py-5 border-b border-[#1a1a1a]">
-          <div className="w-7 h-7 rounded-full bg-[#7c3aed] flex items-center justify-center shrink-0">
-            <span className="text-white text-xs font-bold">F</span>
-          </div>
+          <Image src="/logo.svg" alt="FollowThrough" width={28} height={28} className="shrink-0" />
           <span className="text-[#f5f5f5] font-semibold text-sm tracking-tight">FollowThrough</span>
         </div>
 
@@ -56,6 +55,11 @@ export function Sidebar({ userEmail }: SidebarProps) {
             </Link>
           ))}
         </nav>
+
+        <div className="px-3 py-3 border-t border-[#1a1a1a]">
+          <p className="text-[#3f3f46] text-[10px] uppercase tracking-wider px-3 mb-2">Integrations</p>
+          <GmailConnect />
+        </div>
 
         <div className="px-3 py-4 border-t border-[#1a1a1a]">
           <p className="text-[#71717a] text-xs px-3 mb-3 truncate">{userEmail}</p>
