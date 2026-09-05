@@ -1,20 +1,22 @@
 'use client'
 
 import { useState } from 'react'
-import { ArrowDown, ArrowUp, CalendarClock, CheckCircle2, Trash2, MessageSquare } from 'lucide-react'
+import { ArrowDownLeft, ArrowUpRight, CalendarClock, CheckCircle2, Trash2, MessageSquare, MoreHorizontal } from 'lucide-react'
 import { formatDistanceToNow, isPast, isToday, isTomorrow } from 'date-fns'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import type { Loop } from '@/types/loop'
 
-const STATE_CONFIG: Record<string, { badge: string; dot: string; label: string }> = {
-  waiting:   { badge: 'bg-blue-50 text-blue-600 border-blue-100',     dot: 'bg-blue-400',   label: 'Waiting' },
-  due:       { badge: 'bg-amber-50 text-amber-600 border-amber-100',  dot: 'bg-amber-400',  label: 'Due' },
-  overdue:   { badge: 'bg-red-50 text-red-500 border-red-100',        dot: 'bg-red-400',    label: 'Overdue' },
-  escalated: { badge: 'bg-violet-50 text-violet-600 border-violet-100', dot: 'bg-violet-400', label: 'Escalated' },
-  closed:    { badge: 'bg-green-50 text-green-600 border-green-100',  dot: 'bg-green-400',  label: 'Closed' },
+const STATE_CONFIG: Record<string, { badge: string; left: string }> = {
+  waiting:   { badge: 'bg-blue-50 text-blue-600 border-blue-100',      left: 'bg-blue-400' },
+  due:       { badge: 'bg-amber-50 text-amber-600 border-amber-100',   left: 'bg-amber-400' },
+  overdue:   { badge: 'bg-red-50 text-red-500 border-red-100',         left: 'bg-red-400' },
+  escalated: { badge: 'bg-violet-50 text-violet-600 border-violet-100',left: 'bg-violet-400' },
+  closed:    { badge: 'bg-green-50 text-green-600 border-green-100',   left: 'bg-green-400' },
 }
-
+const STATE_LABELS: Record<string, string> = {
+  waiting: 'Waiting', due: 'Due', overdue: 'Overdue', escalated: 'Escalated', closed: 'Closed',
+}
 const SOURCE_LABELS: Record<string, string> = { email: 'Email', manual: 'Manual', voice: 'Voice' }
 
 function dueDateColor(d: string) {
@@ -23,28 +25,27 @@ function dueDateColor(d: string) {
   if (isToday(date) || isTomorrow(date)) return 'text-amber-500'
   return 'text-slate-400'
 }
-
 function dueDateLabel(d: string) {
   const date = new Date(d)
   if (isPast(date) && !isToday(date)) return `${formatDistanceToNow(date)} overdue`
   if (isToday(date)) return 'due today'
-  return `due in ${formatDistanceToNow(date)}`
+  return `due ${formatDistanceToNow(date, { addSuffix: true })}`
 }
 
 interface LoopCardProps {
   loop: Loop
-  onUpdate: (updated: Loop) => void
+  onUpdate: (u: Loop) => void
   onClose: (id: string) => void
 }
 
 export function LoopCard({ loop, onUpdate, onClose }: LoopCardProps) {
-  const [hovered, setHovered] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const [closing, setClosing] = useState(false)
-
   const cfg = STATE_CONFIG[loop.state] ?? STATE_CONFIG.waiting
 
   const handleClose = async (e: React.MouseEvent) => {
     e.stopPropagation()
+    setMenuOpen(false)
     setClosing(true)
     try {
       const res = await fetch(`/api/loops/${loop.id}/state`, {
@@ -55,96 +56,112 @@ export function LoopCard({ loop, onUpdate, onClose }: LoopCardProps) {
       if (!res.ok) throw new Error()
       onClose(loop.id)
       toast.success('Loop closed')
-    } catch {
-      toast.error('Failed to close loop')
-    } finally {
-      setClosing(false)
-    }
+    } catch { toast.error('Failed to close loop') }
+    finally { setClosing(false) }
   }
+
+  const avatarColor = [
+    'bg-rose-100 text-rose-600', 'bg-orange-100 text-orange-600',
+    'bg-amber-100 text-amber-600', 'bg-emerald-100 text-emerald-600',
+    'bg-sky-100 text-sky-600', 'bg-violet-100 text-violet-600',
+  ][loop.counterparty.charCodeAt(0) % 6]
 
   return (
     <div
       className={cn(
-        'rounded-xl bg-white border border-slate-200/80 p-4 shadow-sm cursor-pointer',
-        'hover:shadow-md hover:border-slate-300 transition-all duration-150'
+        'group relative rounded-2xl bg-white border border-slate-200/80 shadow-sm overflow-hidden',
+        'hover:shadow-md hover:border-slate-300 transition-all duration-150',
+        closing && 'opacity-50 pointer-events-none'
       )}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
     >
-      {/* Top row */}
-      <div className="flex items-center justify-between mb-3">
-        <span className={cn('text-[11px] font-medium px-2 py-0.5 rounded-full border', cfg.badge)}>
-          {cfg.label}
-        </span>
-        <div className="flex items-center gap-1.5">
-          {loop.direction === 'inbound'
-            ? <ArrowDown size={11} className="text-slate-300" />
-            : <ArrowUp size={11} className="text-slate-300" />
-          }
-          {hovered && (
-            <div className="flex items-center gap-0.5 ml-1">
-              <button
-                onClick={handleClose}
-                disabled={closing}
-                className="p-1.5 rounded-lg hover:bg-green-50 text-slate-300 hover:text-green-500 transition-colors"
-                title="Mark closed"
-              >
-                <CheckCircle2 size={13} />
-              </button>
-              {loop.next_action && (
-                <button
-                  onClick={e => e.stopPropagation()}
-                  className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-300 hover:text-slate-600 transition-colors"
-                  title="View draft"
-                >
-                  <MessageSquare size={13} />
-                </button>
-              )}
-              <button
-                onClick={handleClose}
-                disabled={closing}
-                className="p-1.5 rounded-lg hover:bg-red-50 text-slate-300 hover:text-red-400 transition-colors"
-                title="Delete"
-              >
-                <Trash2 size={13} />
-              </button>
+      {/* State accent bar */}
+      <div className={cn('absolute left-0 top-0 bottom-0 w-[3px]', cfg.left)} />
+
+      <div className="pl-4 pr-3 pt-3 pb-3">
+        {/* Top row */}
+        <div className="flex items-start justify-between gap-2 mb-2.5">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className={cn('w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0', avatarColor)}>
+              {loop.counterparty[0]?.toUpperCase() ?? '?'}
             </div>
-          )}
-        </div>
-      </div>
+            <p className="text-sm font-semibold text-slate-800 truncate">{loop.counterparty}</p>
+          </div>
 
-      {/* Person */}
-      <div className="flex items-center gap-2 mb-1.5">
-        <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 text-[10px] font-semibold uppercase shrink-0">
-          {loop.counterparty?.[0] ?? '?'}
-        </div>
-        <p className="text-sm font-semibold text-slate-800 truncate">{loop.counterparty}</p>
-      </div>
-
-      {/* Description */}
-      <p className="text-xs text-slate-500 line-clamp-2 mb-3 leading-relaxed pl-8">{loop.description}</p>
-
-      {/* Footer */}
-      <div className="flex items-center gap-2 pl-8">
-        <div className={cn('flex items-center gap-1 text-[11px]', dueDateColor(loop.expected_by))}>
-          <CalendarClock size={11} />
-          <span>{dueDateLabel(loop.expected_by)}</span>
-        </div>
-        <div className="flex items-center gap-1.5 ml-auto">
-          <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-50 text-slate-400 border border-slate-100">
-            {SOURCE_LABELS[loop.source] ?? loop.source}
-          </span>
-          {loop.nudge_count > 0 && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-red-50 text-red-400 border border-red-100">
-              {loop.nudge_count} nudge{loop.nudge_count !== 1 ? 's' : ''}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className={cn('text-[10px] font-semibold px-2 py-0.5 rounded-full border', cfg.badge)}>
+              {STATE_LABELS[loop.state]}
             </span>
-          )}
-          {loop.next_action && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-violet-50 text-violet-500 border border-violet-100">
-              draft
-            </span>
-          )}
+            <div className="relative">
+              <button
+                onClick={e => { e.stopPropagation(); setMenuOpen(o => !o) }}
+                className="p-1 rounded-lg text-slate-300 hover:text-slate-600 hover:bg-slate-100 opacity-0 group-hover:opacity-100 transition-all"
+              >
+                <MoreHorizontal size={14} />
+              </button>
+              {menuOpen && (
+                <div className="absolute right-0 top-full mt-1 w-44 bg-white rounded-xl border border-slate-200 shadow-lg py-1 z-20">
+                  {loop.next_action && (
+                    <button
+                      onClick={e => { e.stopPropagation(); setMenuOpen(false) }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-600 hover:bg-slate-50"
+                    >
+                      <MessageSquare size={12} /> View draft
+                    </button>
+                  )}
+                  <button
+                    onClick={handleClose}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-green-600 hover:bg-green-50"
+                  >
+                    <CheckCircle2 size={12} /> Mark closed
+                  </button>
+                  <button
+                    onClick={handleClose}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-red-500 hover:bg-red-50"
+                  >
+                    <Trash2 size={12} /> Delete
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
+
+        {/* Description */}
+        <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-3 pl-9">
+          {loop.description}
+        </p>
+
+        {/* Footer */}
+        <div className="flex items-center gap-2 pl-9">
+          <div className={cn('flex items-center gap-1 text-[11px] font-medium', dueDateColor(loop.expected_by))}>
+            <CalendarClock size={11} />
+            {dueDateLabel(loop.expected_by)}
+          </div>
+
+          <div className="flex items-center gap-1 ml-auto">
+            {loop.direction === 'inbound'
+              ? <ArrowDownLeft size={11} className="text-slate-200" />
+              : <ArrowUpRight size={11} className="text-slate-200" />
+            }
+            <span className="text-[10px] text-slate-300">{SOURCE_LABELS[loop.source] ?? loop.source}</span>
+          </div>
+        </div>
+
+        {/* Badges row */}
+        {(loop.nudge_count > 0 || loop.next_action) && (
+          <div className="flex gap-1.5 mt-2.5 pl-9">
+            {loop.nudge_count > 0 && (
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-50 text-orange-500 border border-orange-100 font-medium">
+                {loop.nudge_count} nudge{loop.nudge_count !== 1 ? 's' : ''}
+              </span>
+            )}
+            {loop.next_action && (
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-violet-50 text-violet-500 border border-violet-100 font-medium">
+                draft ready
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
