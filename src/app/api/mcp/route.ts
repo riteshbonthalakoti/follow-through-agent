@@ -50,9 +50,12 @@ export async function POST(request: NextRequest) {
   // ── tools/call ──────────────────────────────────────────────────────────────
   if (method === 'tools/call') {
     // Auth via header
-    const secret = request.headers.get('X-MCP-Secret') ?? request.headers.get('x-mcp-secret')
+    const xSecret = request.headers.get('X-MCP-Secret') ?? request.headers.get('x-mcp-secret')
+    const authHeader = request.headers.get('Authorization') ?? ''
+    const bearerSecret = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader
+    const secret = xSecret ?? bearerSecret
     if (!process.env.MCP_SECRET || secret !== process.env.MCP_SECRET) {
-      return err(id, -32001, 'Unauthorized: invalid or missing X-MCP-Secret header')
+      return err(id, -32001, 'Unauthorized: invalid or missing secret')
     }
 
     const toolName = params.name as string
