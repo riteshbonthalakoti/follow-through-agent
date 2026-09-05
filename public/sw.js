@@ -1,16 +1,13 @@
-const CACHE_NAME = 'followthrough-v1'
-const STATIC_URLS = [
-  '/',
-  '/dashboard',
-  '/approvals',
-  '/login',
+const CACHE_NAME = 'followthrough-v2'
+const STATIC_ASSETS = [
   '/manifest.json',
   '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png',
 ]
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_URLS))
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
   )
   self.skipWaiting()
 })
@@ -27,23 +24,28 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url)
 
-  // Network-first for API routes
-  if (url.pathname.startsWith('/api/')) {
+  // Always network-first for API and HTML navigation — never serve stale auth redirects
+  if (
+    url.pathname.startsWith('/api/') ||
+    event.request.mode === 'navigate'
+  ) {
     event.respondWith(
-      fetch(event.request).catch(() => caches.match(event.request))
+      fetch(event.request).catch(() => {
+        // Offline fallback for navigation: return cached landing page
+        return caches.match('/') || new Response('Offline — open the app when connected.', { status: 503 })
+      })
     )
     return
   }
 
-  // Cache-first for same-origin static assets
+  // Cache-first for static assets (images, fonts, icons)
   if (url.origin === self.location.origin) {
     event.respondWith(
       caches.match(event.request).then((cached) => {
         if (cached) return cached
         return fetch(event.request).then((response) => {
           if (response.ok) {
-            const clone = response.clone()
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone))
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, response.clone()))
           }
           return response
         })
