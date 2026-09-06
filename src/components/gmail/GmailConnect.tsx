@@ -50,15 +50,31 @@ export function GmailConnect() {
 
   if (!status) return null
 
+  const handleConnect = async () => {
+    const res = await fetch('/api/gmail/connect')
+    const data = await res.json()
+    if (!data.url) { toast.error('Could not start Gmail connect'); return }
+    const popup = window.open(data.url, 'gmail-oauth', 'width=500,height=650,left=200,top=100')
+    // Poll until popup closes, then re-fetch status
+    const timer = setInterval(async () => {
+      if (!popup || popup.closed) {
+        clearInterval(timer)
+        const s = await fetch('/api/gmail/scan').then(r => r.json()).catch(() => null)
+        if (s) setStatus(s)
+        if (s?.connected) toast.success('Gmail connected!')
+      }
+    }, 800)
+  }
+
   if (!status.connected) {
     return (
-      <a
-        href="/api/gmail/connect"
+      <button
+        onClick={handleConnect}
         className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-[#71717a] hover:bg-[#1a1a1a] hover:text-[#f5f5f5] transition-colors w-full"
       >
         <Mail size={16} />
         <span>Connect Gmail</span>
-      </a>
+      </button>
     )
   }
 
