@@ -88,12 +88,8 @@ Rules:
   })
 }
 
-// GET: probe what's reachable and return agent list
+// GET: probe what's reachable — no auth required (read-only probe, no user data)
 export async function GET() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   const apiKey = process.env.LYZR_API_KEY
   if (!apiKey) return NextResponse.json({ error: 'LYZR_API_KEY not set' }, { status: 500 })
 
