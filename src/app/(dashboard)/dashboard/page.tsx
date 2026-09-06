@@ -50,11 +50,11 @@ export default function DashboardPage() {
       {/* Page header */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">Open Loops</h1>
-          <p className="text-sm text-slate-400 mt-0.5">
+          <h1 className="text-xl font-bold text-[#1a1a1a] tracking-tight">Open Loops</h1>
+          <p className="text-sm text-[#1a1a1a]/40 mt-0.5">
             {total > 0
               ? `${total} active loop${total !== 1 ? 's' : ''} tracked`
-              : 'All loops resolved — nice work'}
+              : 'Nothing to chase right now'}
           </p>
         </div>
         {urgent > 0 && (
@@ -66,7 +66,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats grid */}
-      {stats && (
+      {stats && total > 0 && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-7">
           {STATS_DEF.map(({ key, label, icon: Icon, ring, num, bg, sub }) => (
             <div

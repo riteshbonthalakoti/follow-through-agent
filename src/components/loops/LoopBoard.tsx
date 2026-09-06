@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
+import { Plus, Mail, Sparkles } from 'lucide-react'
 import { LoopCard, computePriority } from './LoopCard'
 import { AddLoopDialog } from './AddLoopDialog'
 import { createClient } from '@/lib/supabase/client'
@@ -28,6 +29,22 @@ export function LoopBoard({ externalDialogOpen, onExternalDialogClose }: LoopBoa
 
   const dialogOpen = externalDialogOpen ?? internalDialog
   const closeDialog = () => { onExternalDialogClose?.(); setInternalDialog(false) }
+  const [connecting, setConnecting] = useState(false)
+
+  const connectGmail = async () => {
+    setConnecting(true)
+    try {
+      const res = await fetch('/api/gmail/connect')
+      const data = await res.json()
+      if (!res.ok || !data.url) throw new Error('Failed to start OAuth')
+      const w = window.open(data.url, 'gmail-oauth', 'width=500,height=650,left=200,top=100')
+      if (!w) window.location.href = data.url
+    } catch {
+      toast.error('Could not open Google sign-in')
+    } finally {
+      setConnecting(false)
+    }
+  }
 
   const fetchLoops = useCallback(async () => {
     const res = await fetch('/api/loops')
@@ -84,6 +101,50 @@ export function LoopBoard({ externalDialogOpen, onExternalDialogClose }: LoopBoa
           </div>
         ))}
       </div>
+    )
+  }
+
+  if (loops.length === 0) {
+    return (
+      <>
+        <div className="rounded-3xl border border-[#1a1a1a]/8 bg-white p-10 sm:p-14 text-center max-w-2xl mx-auto">
+          <div className="w-14 h-14 rounded-2xl bg-[#7C5CFC]/10 flex items-center justify-center mx-auto mb-6">
+            <Sparkles size={22} className="text-[#7C5CFC]" />
+          </div>
+          <h2 className="text-xl font-bold text-[#1a1a1a] tracking-tight mb-2">Nothing tracked yet</h2>
+          <p className="text-sm text-[#1a1a1a]/45 leading-relaxed max-w-sm mx-auto mb-8">
+            Add a loop manually, or connect Gmail so FollowThrough can find open commitments in your inbox automatically.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              onClick={() => setInternalDialog(true)}
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#1a1a1a] text-white text-sm font-semibold hover:bg-[#1a1a1a]/85 transition-colors w-full sm:w-auto"
+            >
+              <Plus size={15} /> Add your first loop
+            </button>
+            <button
+              onClick={connectGmail}
+              disabled={connecting}
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-[#1a1a1a]/15 text-[#1a1a1a] text-sm font-semibold hover:bg-[#1a1a1a]/5 transition-colors disabled:opacity-50 w-full sm:w-auto"
+            >
+              <Mail size={15} /> {connecting ? 'Opening…' : 'Connect Gmail'}
+            </button>
+          </div>
+        </div>
+
+        {/* Column previews, quiet, beneath the CTA */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6 max-w-2xl mx-auto opacity-60">
+          {COLUMNS.map(({ state, label, pill, bar }) => (
+            <div key={state} className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/60 border border-[#1a1a1a]/6">
+              <div className={`w-1.5 h-1.5 rounded-full ${bar}`} />
+              <span className="text-[11px] font-semibold text-[#1a1a1a]/45 uppercase tracking-wide">{label}</span>
+              <span className={`ml-auto text-[11px] font-bold px-1.5 py-0.5 rounded-full ${pill}`}>0</span>
+            </div>
+          ))}
+        </div>
+
+        <AddLoopDialog open={dialogOpen} onClose={closeDialog} onAdded={fetchLoops} />
+      </>
     )
   }
 
