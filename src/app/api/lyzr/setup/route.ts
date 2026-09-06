@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
 const LYZR_BASES = [
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       const r = await fetch(`${base}/v3/inference/chat/`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ agent_id: 'probe', session_id: 'probe', user_id: user.id, message: 'ping' }),
+        body: JSON.stringify({ agent_id: 'probe', session_id: 'probe', user_id: 'setup-probe', message: 'ping' }),
       })
       // 422 = right endpoint, wrong agent_id — that's the working base
       if (r.status === 422 || r.status === 200 || r.status === 404) {
