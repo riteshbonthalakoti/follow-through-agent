@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { Plus, Mail, Sparkles } from 'lucide-react'
@@ -150,7 +150,15 @@ export function LoopBoard({ externalDialogOpen, onExternalDialogClose }: LoopBoa
 
   return (
     <>
-      <div className="overflow-x-auto -mx-1 px-1 pb-2 snap-x snap-mandatory sm:snap-none">
+      {/* ── Mobile: tab pills + single column ──────────────────────────── */}
+      <MobileBoard
+        loops={loops}
+        onUpdate={u => setLoops(prev => prev.map(l => l.id === u.id ? u : l))}
+        onClose={id => setLoops(prev => prev.filter(l => l.id !== id))}
+      />
+
+      {/* ── Desktop: 4-column kanban ────────────────────────────────────── */}
+      <div className="hidden sm:block overflow-x-auto -mx-1 px-1 pb-2">
         <div className="flex gap-4" style={{ minWidth: 'max(640px, 100%)' }}>
           {COLUMNS.map(({ state, label, accent, pill, bar, emptyIcon, emptyText }) => {
             const raw = loops.filter(l => l.state === state)
@@ -158,16 +166,13 @@ export function LoopBoard({ externalDialogOpen, onExternalDialogClose }: LoopBoa
               ? [...raw].sort((a, b) => computePriority(b) - computePriority(a))
               : raw
             return (
-              <div key={state} className="flex-1 min-w-[260px] flex flex-col gap-3 snap-start">
-                {/* Column header */}
+              <div key={state} className="flex-1 min-w-[260px] flex flex-col gap-3">
                 <div className={`sticky top-14 z-10 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white border ${accent} shadow-sm`}>
                   <div className={`w-2 h-2 rounded-full ${bar}`} />
                   <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">{label}</span>
                   <span className={`ml-auto text-xs font-bold px-2 py-0.5 rounded-full ${pill}`}>{items.length}</span>
                 </div>
-
-                {/* Cards */}
-                <div className="flex flex-col gap-2.5 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 260px)' }}>
+                <div className="flex flex-col gap-2.5">
                   {items.length === 0 ? (
                     <div className="flex flex-col items-center justify-center gap-3 py-10 rounded-2xl border border-dashed border-slate-200 bg-white/50 text-center px-4">
                       <span className="text-2xl">{emptyIcon}</span>
@@ -175,9 +180,7 @@ export function LoopBoard({ externalDialogOpen, onExternalDialogClose }: LoopBoa
                     </div>
                   ) : (
                     items.map(loop => (
-                      <LoopCard
-                        key={loop.id}
-                        loop={loop}
+                      <LoopCard key={loop.id} loop={loop}
                         onUpdate={u => setLoops(prev => prev.map(l => l.id === u.id ? u : l))}
                         onClose={id => setLoops(prev => prev.filter(l => l.id !== id))}
                       />
@@ -192,5 +195,69 @@ export function LoopBoard({ externalDialogOpen, onExternalDialogClose }: LoopBoa
 
       <AddLoopDialog open={dialogOpen} onClose={closeDialog} onAdded={fetchLoops} />
     </>
+  )
+}
+
+// ── Mobile tab board ──────────────────────────────────────────────────────────
+
+function MobileBoard({ loops, onUpdate, onClose }: {
+  loops: Loop[]
+  onUpdate: (u: Loop) => void
+  onClose: (id: string) => void
+}) {
+  const [active, setActive] = useState<LoopState>('overdue')
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Auto-select the most urgent tab that has items
+  useEffect(() => {
+    const priority: LoopState[] = ['overdue', 'due', 'waiting', 'escalated']
+    const first = priority.find(s => loops.some(l => l.state === s))
+    if (first) setActive(first)
+  }, [loops])
+
+  const items = loops.filter(l => l.state === active)
+    .sort((a, b) => active === 'overdue' ? computePriority(b) - computePriority(a) : 0)
+
+  return (
+    <div className="sm:hidden flex flex-col gap-3">
+      {/* Tab pills */}
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+        {COLUMNS.map(({ state, label, pill, bar }) => {
+          const count = loops.filter(l => l.state === state).length
+          const isActive = active === state
+          return (
+            <button
+              key={state}
+              onClick={() => { setActive(state); scrollRef.current?.scrollTo({ top: 0 }) }}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap border transition-all ${
+                isActive
+                  ? `bg-[#1a1a1a] text-white border-transparent`
+                  : `bg-white text-slate-500 border-slate-200`
+              }`}
+            >
+              <div className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-white/60' : bar}`} />
+              {label}
+              <span className={`ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${isActive ? 'bg-white/20 text-white' : pill}`}>
+                {count}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Cards */}
+      <div ref={scrollRef} className="flex flex-col gap-3">
+        {items.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-3 py-14 rounded-2xl border border-dashed border-slate-200 bg-white/50 text-center px-4">
+            <span className="text-3xl">{COLUMNS.find(c => c.state === active)?.emptyIcon}</span>
+            <p className="text-xs text-slate-300 font-medium leading-relaxed">{COLUMNS.find(c => c.state === active)?.emptyText}</p>
+          </div>
+        ) : (
+          items.map(loop => (
+            <LoopCard key={loop.id} loop={loop} onUpdate={onUpdate} onClose={onClose} />
+          ))
+        )}
+      </div>
+    </div>
   )
 }
