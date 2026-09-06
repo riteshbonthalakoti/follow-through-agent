@@ -4,7 +4,7 @@ import { motion, useInView } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRef, useEffect, useState } from 'react'
-import { ArrowRight, Zap, Mail, CheckCircle2, Download, Share, Plus } from 'lucide-react'
+import { ArrowRight, Zap, Mail, ShieldCheck, Download, Share, Plus, CheckCircle2 } from 'lucide-react'
 
 // ── Utilities ────────────────────────────────────────────────────────────────
 
@@ -44,7 +44,7 @@ function FadeUp({ children, delay = 0, className = '' }: { children: React.React
       ref={ref}
       initial={{ opacity: 0, y: 24 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.5, delay, ease: [0.4, 0, 0.2, 1] }}
+      transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}
       className={className}
     >
       {children}
@@ -52,87 +52,100 @@ function FadeUp({ children, delay = 0, className = '' }: { children: React.React
   )
 }
 
-// ── Mini loop preview card ─────────────────────────────────────────────────
+// ── Live loop card mockup (pure CSS, cycles through states) ───────────────────
 
-const DEMO_LOOPS = [
-  { state: 'overdue', name: 'Rahul', desc: 'Send revised proposal PDF', when: '3 days overdue', dot: 'bg-red-400', badge: 'bg-red-50 text-red-600 border-red-100' },
-  { state: 'due',     name: 'TechCorp HR', desc: 'Share interview feedback', when: 'Due today',       dot: 'bg-amber-400', badge: 'bg-amber-50 text-amber-600 border-amber-100' },
-  { state: 'waiting', name: 'Priya',       desc: "Confirm next week's meeting", when: 'Due in 2 days',  dot: 'bg-blue-400', badge: 'bg-blue-50 text-blue-600 border-blue-100' },
+const LOOP_STATES = [
+  { name: 'Rahul', desc: 'Send revised proposal PDF', when: '3 days overdue', tint: '#B3492B' },
+  { name: 'TechCorp HR', desc: 'Share interview feedback', when: 'Due today', tint: '#8A6D1F' },
+  { name: 'Priya', desc: "Confirm next week's meeting", when: 'Due in 2 days', tint: '#3D5A6C' },
 ] as const
 
-function AppPreview() {
+function LoopCard() {
+  const [active, setActive] = useState(0)
+  useEffect(() => {
+    const t = setInterval(() => setActive(a => (a + 1) % LOOP_STATES.length), 2800)
+    return () => clearInterval(t)
+  }, [])
+
   return (
-    <div className="relative w-full max-w-sm mx-auto">
-      {/* Phone shell */}
-      <div className="bg-white rounded-[2rem] border border-slate-200 shadow-2xl overflow-hidden">
-        {/* Status bar */}
-        <div className="bg-[#F7F6F3] px-6 pt-3 pb-2 flex items-center justify-between">
-          <span className="text-[10px] font-semibold text-slate-500">9:41</span>
-          <div className="flex gap-1">
-            <div className="w-1 h-1 rounded-full bg-slate-400" />
-            <div className="w-1 h-1 rounded-full bg-slate-400" />
-            <div className="w-1 h-1 rounded-full bg-slate-400" />
+    <div className="relative w-full max-w-[380px] mx-auto">
+      <div className="rounded-[1.75rem] border border-[#1a1a1a]/10 bg-white shadow-[0_20px_60px_-15px_rgba(26,26,26,0.18)] overflow-hidden">
+        <div className="flex items-center gap-2 px-5 py-4 border-b border-[#1a1a1a]/8">
+          <Image src="/logo.svg" alt="" width={18} height={18} />
+          <span className="text-[13px] font-semibold text-[#1a1a1a] tracking-tight">FollowThrough</span>
+          <div className="ml-auto flex items-center gap-1 text-[10px] font-medium text-[#1a1a1a]/40 uppercase tracking-wider">
+            Live
+            <span className="relative flex h-1.5 w-1.5 ml-1">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#1a1a1a]/40" />
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#1a1a1a]/60" />
+            </span>
           </div>
         </div>
 
-        {/* App nav */}
-        <div className="bg-white border-b border-slate-100 px-4 py-3 flex items-center gap-2">
-          <Image src="/logo.svg" alt="" width={20} height={20} />
-          <span className="text-xs font-bold text-slate-800">FollowThrough</span>
-          <div className="ml-auto w-6 h-6 rounded-full bg-violet-600 flex items-center justify-center">
-            <Plus size={12} className="text-white" />
-          </div>
-        </div>
-
-        {/* Stats row */}
-        <div className="bg-[#F7F6F3] px-4 py-3 grid grid-cols-3 gap-2">
-          {[
-            { n: 1, label: 'Overdue', c: 'text-red-600' },
-            { n: 1, label: 'Due', c: 'text-amber-600' },
-            { n: 1, label: 'Waiting', c: 'text-blue-600' },
-          ].map(s => (
-            <div key={s.label} className="bg-white rounded-xl p-2 border border-slate-200 shadow-sm text-center">
-              <p className={`text-lg font-bold ${s.c}`}>{s.n}</p>
-              <p className="text-[9px] text-slate-400 font-medium">{s.label}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Loop cards */}
-        <div className="px-4 py-3 space-y-2 pb-4">
-          {DEMO_LOOPS.map((l, i) => (
+        <div className="p-5">
+          {LOOP_STATES.map((l, i) => (
             <motion.div
               key={l.name}
-              initial={{ opacity: 0, x: 16 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 + i * 0.15, duration: 0.4 }}
-              className="bg-white rounded-xl border border-slate-200 p-3 shadow-sm relative overflow-hidden"
+              animate={{
+                opacity: i === active ? 1 : 0,
+                y: i === active ? 0 : 12,
+                position: i === active ? 'relative' : 'absolute',
+              }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              className="w-full"
+              style={{ display: i === active ? 'block' : 'none' }}
             >
-              <div className={`absolute left-0 top-0 bottom-0 w-[3px] ${l.dot}`} />
-              <div className="pl-3">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-xs font-semibold text-slate-800">{l.name}</p>
-                  <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full border ${l.badge}`}>{l.when}</span>
+              <div className="rounded-2xl border border-[#1a1a1a]/8 bg-[#FAFAF8] p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm font-semibold text-[#1a1a1a]">{l.name}</p>
+                  <span
+                    className="text-[10px] font-semibold px-2 py-1 rounded-full"
+                    style={{ color: l.tint, backgroundColor: `${l.tint}14` }}
+                  >
+                    {l.when}
+                  </span>
                 </div>
-                <p className="text-[10px] text-slate-400">{l.desc}</p>
+                <p className="text-[13px] text-[#1a1a1a]/50 leading-relaxed mb-4">{l.desc}</p>
+                <div className="flex gap-2">
+                  <div className="flex-1 h-9 rounded-xl bg-[#1a1a1a] text-white text-[11px] font-semibold flex items-center justify-center gap-1.5">
+                    <CheckCircle2 size={12} /> Approve
+                  </div>
+                  <div className="h-9 px-4 rounded-xl border border-[#1a1a1a]/12 text-[11px] font-semibold text-[#1a1a1a]/60 flex items-center justify-center">
+                    Edit
+                  </div>
+                </div>
               </div>
             </motion.div>
           ))}
+
+          <div className="flex items-center gap-1.5 justify-center mt-5">
+            {LOOP_STATES.map((_, i) => (
+              <div
+                key={i}
+                className="h-1 rounded-full transition-all duration-500"
+                style={{ width: i === active ? 18 : 6, backgroundColor: i === active ? '#1a1a1a' : 'rgba(26,26,26,0.14)' }}
+              />
+            ))}
+          </div>
         </div>
       </div>
-
-      {/* Glow */}
-      <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-48 h-16 bg-violet-400/20 blur-2xl rounded-full" />
     </div>
   )
 }
 
-// ── Feature pillars ───────────────────────────────────────────────────────────
+// ── Bento features ──────────────────────────────────────────────────────────
 
 const FEATURES = [
-  { icon: CheckCircle2, title: 'Zero autonomous sends', body: 'Every follow-up is reviewed by you before it goes. You\'re always in control.', color: 'bg-green-50 text-green-600' },
-  { icon: Mail,         title: 'Gmail auto-detect',     body: 'Connect your inbox and watch open loops surface automatically using Gemini AI.', color: 'bg-blue-50 text-blue-600' },
-  { icon: Zap,          title: 'Instant nudge drafts',  body: 'When someone goes quiet, AI drafts the perfect follow-up in seconds.', color: 'bg-violet-50 text-violet-600' },
+  { icon: ShieldCheck, title: 'Zero autonomous sends', body: 'Every follow-up is reviewed by you before it goes.' },
+  { icon: Mail, title: 'Gmail auto-detect', body: 'Connect your inbox and watch open loops surface on their own.' },
+  { icon: Zap, title: 'Instant nudge drafts', body: 'When someone goes quiet, AI drafts the follow-up in seconds.' },
+  { icon: CheckCircle2, title: 'One-tap approve', body: 'Read it, edit if needed, send. Nothing leaves without you.' },
+]
+
+const STEPS = [
+  { n: '01', title: 'Connect Gmail', body: 'Sign in once. FollowThrough starts reading your sent and received threads for open commitments.' },
+  { n: '02', title: 'Loops surface', body: 'Every promise, proposal, and callback gets tracked automatically — no manual entry.' },
+  { n: '03', title: 'Approve & send', body: 'When a loop goes quiet, review the AI draft and send it in one tap.' },
 ]
 
 // ── Main page ─────────────────────────────────────────────────────────────────
@@ -141,25 +154,25 @@ export default function LandingPage() {
   const { installPrompt, isIOS, isInstalled, install } = usePWA()
 
   return (
-    <main className="bg-[#F7F6F3] overflow-x-hidden">
+    <main className="bg-[#FAFAF8] overflow-x-hidden">
 
       {/* ── NAV ────────────────────────────────────────────────────────── */}
-      <nav className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-slate-200/60 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center">
+      <nav className="sticky top-0 z-40 bg-[#FAFAF8]/85 backdrop-blur-xl border-b border-[#1a1a1a]/8">
+        <div className="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center">
           <Link href="/" className="flex items-center gap-2 mr-auto">
-            <Image src="/logo.svg" alt="FollowThrough" width={24} height={24} />
-            <span className="font-bold text-sm text-slate-900 tracking-tight">FollowThrough</span>
+            <Image src="/logo.svg" alt="FollowThrough" width={22} height={22} />
+            <span className="font-semibold text-[15px] text-[#1a1a1a] tracking-tight">FollowThrough</span>
           </Link>
           <div className="flex items-center gap-2">
             <Link
               href="/login"
-              className="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors px-3 py-1.5"
+              className="text-sm font-medium text-[#1a1a1a]/55 hover:text-[#1a1a1a] transition-colors px-3 py-2"
             >
               Sign in
             </Link>
             <Link
               href="/login"
-              className="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-700 transition-colors shadow-sm"
+              className="px-4 py-2.5 rounded-xl bg-[#1a1a1a] text-white text-sm font-semibold hover:bg-[#1a1a1a]/85 transition-colors"
             >
               Get started
             </Link>
@@ -168,15 +181,10 @@ export default function LandingPage() {
       </nav>
 
       {/* ── HERO ───────────────────────────────────────────────────────── */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 pt-16 pb-20 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-        {/* Left */}
+      <section className="max-w-6xl mx-auto px-5 sm:px-8 pt-16 sm:pt-24 pb-20 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
         <div>
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-50 border border-violet-100 text-violet-700 text-xs font-semibold mb-5">
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#1a1a1a]/12 text-[#1a1a1a]/70 text-xs font-medium mb-6">
               <Zap size={11} /> AI-powered follow-up tracking
             </span>
           </motion.div>
@@ -184,40 +192,39 @@ export default function LandingPage() {
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.55 }}
-            className="text-4xl sm:text-5xl font-bold text-slate-900 leading-[1.1] tracking-tight"
+            transition={{ delay: 0.1, duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+            className="text-[2.75rem] sm:text-6xl font-medium text-[#1a1a1a] leading-[1.05] tracking-tight"
             style={{ fontFamily: 'var(--font-playfair)' }}
           >
             Nothing falls<br />through the cracks.
           </motion.h1>
 
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-            className="mt-5 text-base text-slate-500 leading-relaxed max-w-md"
+            transition={{ delay: 0.22, duration: 0.55 }}
+            className="mt-6 text-[17px] text-[#1a1a1a]/55 leading-relaxed max-w-md"
           >
             FollowThrough tracks what others owe you — proposals, callbacks, meetings. When someone ghosts you, AI drafts the nudge. You approve, it sends.
           </motion.p>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-            className="mt-8 flex flex-col sm:flex-row gap-3"
+            transition={{ delay: 0.34, duration: 0.5 }}
+            className="mt-9 flex flex-col sm:flex-row gap-3"
           >
             <Link
               href="/login"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-violet-600 text-white font-semibold hover:bg-violet-700 transition-colors shadow-md text-sm"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[#1a1a1a] text-white font-semibold hover:bg-[#1a1a1a]/85 transition-colors text-sm"
             >
               Start free <ArrowRight size={15} />
             </Link>
 
-            {/* PWA install button */}
             {!isInstalled && (installPrompt || isIOS) && (
               <button
                 onClick={isIOS ? undefined : install}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border-2 border-slate-200 text-slate-700 font-semibold hover:bg-white hover:border-slate-300 transition-all text-sm"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl border border-[#1a1a1a]/15 text-[#1a1a1a]/80 font-semibold hover:bg-[#1a1a1a]/5 transition-colors text-sm"
               >
                 {isIOS ? <><Share size={15} /> Add to Home Screen</> : <><Download size={15} /> Install App</>}
               </button>
@@ -225,123 +232,108 @@ export default function LandingPage() {
           </motion.div>
 
           {isIOS && (
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="mt-3 text-xs text-slate-400 flex items-center gap-1.5"
-            >
+            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="mt-4 text-xs text-[#1a1a1a]/40 flex items-center gap-1.5">
               <Share size={11} /> Tap Share → Add to Home Screen for the full app experience
             </motion.p>
           )}
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.45 }}
-            className="mt-5 text-xs text-slate-400"
+          {/* Social proof stats */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.45, duration: 0.5 }}
+            className="mt-12 grid grid-cols-3 gap-6 max-w-md pt-8 border-t border-[#1a1a1a]/8"
           >
-            Free to use · No credit card · Works offline
-          </motion.p>
+            {[
+              { n: '23', label: 'avg open loops / person' },
+              { n: '3×', label: 'faster follow-up' },
+              { n: '0', label: 'sends without review' },
+            ].map(s => (
+              <div key={s.label}>
+                <p className="text-2xl font-medium text-[#1a1a1a] tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>{s.n}</p>
+                <p className="text-[11px] text-[#1a1a1a]/45 mt-1 leading-snug">{s.label}</p>
+              </div>
+            ))}
+          </motion.div>
         </div>
 
-        {/* Right — app preview */}
+        {/* Right — live loop mockup */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.25, duration: 0.6 }}
-          className="flex justify-center"
+          transition={{ delay: 0.25, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
         >
-          <AppPreview />
+          <LoopCard />
         </motion.div>
       </section>
 
-      {/* ── SOCIAL PROOF ───────────────────────────────────────────────── */}
-      <section className="border-y border-slate-200 bg-white py-8 px-4">
-        <p className="text-sm text-slate-500 text-center max-w-lg mx-auto">
-          The average professional has{' '}
-          <span className="text-slate-900 font-semibold">23 open loops</span> at any time.
-          Most go unresolved. FollowThrough fixes that.
-        </p>
-      </section>
-
-      {/* ── FEATURES ────────────────────────────────────────────────────── */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-20">
-        <FadeUp className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
-            How it works
+      {/* ── BENTO FEATURES ─────────────────────────────────────────────── */}
+      <section className="max-w-6xl mx-auto px-5 sm:px-8 py-20 sm:py-28">
+        <FadeUp className="mb-12">
+          <h2 className="text-3xl sm:text-4xl font-medium text-[#1a1a1a] tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
+            Built to stay out of your way
           </h2>
-          <p className="text-slate-400 mt-3 text-sm max-w-md mx-auto">Three things. That&apos;s the whole product.</p>
         </FadeUp>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {FEATURES.map(({ icon: Icon, title, body, color }, i) => (
-            <FadeUp key={title} delay={i * 0.1}>
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 h-full hover:shadow-md transition-shadow">
-                <div className={`w-10 h-10 rounded-xl ${color} flex items-center justify-center mb-4`}>
-                  <Icon size={18} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {FEATURES.map(({ icon: Icon, title, body }, i) => (
+            <FadeUp key={title} delay={i * 0.08}>
+              <div className="bg-white rounded-2xl border border-[#1a1a1a]/8 p-7 h-full hover:border-[#1a1a1a]/20 transition-colors">
+                <div className="w-9 h-9 rounded-lg bg-[#FAFAF8] border border-[#1a1a1a]/8 flex items-center justify-center mb-5">
+                  <Icon size={16} className="text-[#1a1a1a]/70" />
                 </div>
-                <h3 className="font-bold text-slate-800 text-sm mb-2">{title}</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">{body}</p>
+                <h3 className="font-semibold text-[#1a1a1a] text-[15px] mb-1.5">{title}</h3>
+                <p className="text-[13px] text-[#1a1a1a]/50 leading-relaxed">{body}</p>
               </div>
             </FadeUp>
           ))}
         </div>
       </section>
 
-      {/* ── APPROVAL DEMO ───────────────────────────────────────────────── */}
-      <section className="bg-white border-y border-slate-200 py-20 px-4 sm:px-6">
-        <FadeUp className="max-w-2xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 text-center mb-10 tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
-            Review, then send
-          </h2>
-          <div className="bg-[#F7F6F3] rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-            {/* Card header */}
-            <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-200 bg-white">
-              <div className="w-9 h-9 rounded-full bg-red-100 text-red-600 font-bold text-sm flex items-center justify-center">R</div>
-              <div>
-                <p className="text-sm font-bold text-slate-900">Rahul · Proposal follow-up</p>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-100">3 days overdue</span>
-              </div>
-              <div className="ml-auto flex items-center gap-1 text-[10px] font-medium text-violet-500">
-                <Zap size={10} /> AI draft
-              </div>
-            </div>
-            {/* Draft */}
-            <div className="px-5 py-4">
-              <div className="bg-white rounded-xl border border-slate-200 p-4 text-sm text-slate-700 font-mono leading-relaxed shadow-sm">
-                Hi Rahul, just following up on the proposal I sent last week. Do you have any questions or would you like to set up a quick call to discuss?
-              </div>
-            </div>
-            {/* Actions */}
-            <div className="px-5 pb-5 flex gap-3">
-              <button className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-900 text-white text-sm font-semibold shadow-sm">
-                <CheckCircle2 size={14} /> Approve &amp; Send
-              </button>
-              <button className="px-5 py-3 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold">Edit</button>
-            </div>
+      {/* ── HOW IT WORKS ───────────────────────────────────────────────── */}
+      <section className="border-y border-[#1a1a1a]/8 bg-white py-20 sm:py-28 px-5 sm:px-8">
+        <div className="max-w-6xl mx-auto">
+          <FadeUp className="mb-14">
+            <h2 className="text-3xl sm:text-4xl font-medium text-[#1a1a1a] tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
+              How it works
+            </h2>
+          </FadeUp>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 sm:gap-8">
+            {STEPS.map((s, i) => (
+              <FadeUp key={s.n} delay={i * 0.1}>
+                <p
+                  className="text-5xl sm:text-6xl font-medium text-[#1a1a1a]/10 mb-4 leading-none"
+                  style={{ fontFamily: 'var(--font-playfair)' }}
+                >
+                  {s.n}
+                </p>
+                <h3 className="font-semibold text-[#1a1a1a] text-base mb-2">{s.title}</h3>
+                <p className="text-[13px] text-[#1a1a1a]/50 leading-relaxed max-w-xs">{s.body}</p>
+              </FadeUp>
+            ))}
           </div>
-        </FadeUp>
+        </div>
       </section>
 
       {/* ── CTA ─────────────────────────────────────────────────────────── */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-20 text-center">
+      <section className="max-w-6xl mx-auto px-5 sm:px-8 py-24 sm:py-32 text-center">
         <FadeUp>
-          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4 tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
+          <h2 className="text-4xl sm:text-5xl font-medium text-[#1a1a1a] mb-5 tracking-tight leading-[1.1]" style={{ fontFamily: 'var(--font-playfair)' }}>
             Your loops won&apos;t chase themselves.
           </h2>
-          <p className="text-slate-400 text-sm mb-8 max-w-sm mx-auto">Free forever · No card · Installs like a native app</p>
+          <p className="text-[#1a1a1a]/50 text-[15px] mb-9 max-w-sm mx-auto">Free forever · No card · Installs like a native app</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
               href="/login"
-              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-2xl bg-violet-600 text-white font-bold hover:bg-violet-700 transition-colors shadow-lg text-sm"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-[#1a1a1a] text-white font-semibold hover:bg-[#1a1a1a]/85 transition-colors text-sm"
             >
               Get started free <ArrowRight size={15} />
             </Link>
             {!isInstalled && (installPrompt || isIOS) && (
               <button
                 onClick={isIOS ? undefined : install}
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl border-2 border-slate-200 text-slate-700 font-semibold hover:bg-white transition-all text-sm"
+                className="inline-flex items-center gap-2 px-6 py-4 rounded-xl border border-[#1a1a1a]/15 text-[#1a1a1a]/75 font-semibold hover:bg-[#1a1a1a]/5 transition-colors text-sm"
               >
                 {isIOS ? <><Share size={14} /> Add to Home Screen</> : <><Download size={14} /> Install PWA</>}
               </button>
@@ -351,19 +343,19 @@ export default function LandingPage() {
       </section>
 
       {/* ── FOOTER ──────────────────────────────────────────────────────── */}
-      <footer className="border-t border-slate-200 bg-white py-8 px-4 sm:px-6">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
+      <footer className="border-t border-[#1a1a1a]/8 py-10 px-5 sm:px-8">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
             <Image src="/logo.svg" alt="" width={18} height={18} />
-            <span className="text-sm font-bold text-slate-700">FollowThrough</span>
+            <span className="text-sm font-semibold text-[#1a1a1a]/80">FollowThrough</span>
           </div>
-          <p className="text-xs text-slate-400 text-center">
-            Built with Lyzr AI · Supabase · Gemini · Open source on{' '}
-            <a href="https://github.com/riteshbonthalakoti/follow-through-agent" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-slate-600">
+          <p className="text-xs text-[#1a1a1a]/40 text-center">
+            Built at Lyzr Builder Hour ·{' '}
+            <a href="https://github.com/riteshbonthalakoti/follow-through-agent" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-[#1a1a1a]/70">
               GitHub
             </a>
           </p>
-          <Link href="/login" className="text-xs text-violet-600 font-semibold hover:text-violet-700">
+          <Link href="/login" className="text-xs text-[#1a1a1a]/60 font-semibold hover:text-[#1a1a1a]">
             Sign in →
           </Link>
         </div>
