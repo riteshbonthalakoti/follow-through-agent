@@ -105,6 +105,39 @@
       }
     },
     "/api/gmail/scan": {
+      "get": {
+        "operationId": "getConnectedEmails",
+        "summary": "Get all Gmail accounts connected to FollowThrough. Call this first to discover which emails are available before scanning.",
+        "parameters": [
+          { "name": "x-internal-secret", "in": "header", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Connected Gmail accounts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "connected": { "type": "boolean" },
+                    "connections": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "gmail_email": { "type": "string" },
+                          "user_id": { "type": "string" },
+                          "last_scanned_at": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "operationId": "scanGmail",
         "summary": "Scan Gmail inbox for commitment loops and auto-create them",

@@ -112,11 +112,21 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  const internalSecret = request.headers.get('x-internal-secret')
+  const db = serviceDb()
+
+  if (internalSecret === process.env.MCP_SECRET) {
+    // Return ALL connected Gmail accounts so the agent can discover them
+    const { data: conns } = await db
+      .from('gmail_connections')
+      .select('gmail_email, user_id, last_scanned_at, created_at')
+    return NextResponse.json({ connected: (conns ?? []).length > 0, connections: conns ?? [] })
+  }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const db = serviceDb()
   const { data: conn } = await db
     .from('gmail_connections')
     .select('gmail_email, last_scanned_at, created_at')
