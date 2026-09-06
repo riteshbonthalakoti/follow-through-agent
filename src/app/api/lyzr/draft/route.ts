@@ -16,8 +16,10 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { loop_id, agent_id } = await request.json()
-  if (!loop_id || !agent_id) return NextResponse.json({ error: 'loop_id and agent_id required' }, { status: 400 })
+  const { loop_id, agent_id: clientAgentId } = await request.json()
+  const agent_id = clientAgentId ?? process.env.LYZR_AGENT_ID
+  if (!loop_id) return NextResponse.json({ error: 'loop_id required' }, { status: 400 })
+  if (!agent_id) return NextResponse.json({ error: 'LYZR_AGENT_ID not configured' }, { status: 500 })
 
   const db = serviceDb()
   const { data: loop, error } = await db.from('loops').select('*').eq('id', loop_id).eq('owner_id', user.id).single()
