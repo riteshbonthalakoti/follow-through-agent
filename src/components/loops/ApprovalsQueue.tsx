@@ -34,6 +34,7 @@ export function ApprovalsQueue() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editText, setEditText] = useState('')
   const [acting, setActing] = useState<string | null>(null)
+  const [toEmails, setToEmails] = useState<Record<string, string>>({})
 
   const fetchLoops = useCallback(async () => {
     const res = await fetch('/api/loops')
@@ -64,11 +65,19 @@ export function ApprovalsQueue() {
     return () => { sb.removeChannel(ch) }
   }, [])
 
-  // Feature 1: real send via Gmail API
   const handleSend = async (loop: Loop) => {
+    const to = toEmails[loop.id]?.trim()
+    if (!to || !to.includes('@')) {
+      toast.error('Enter a valid recipient email first')
+      return
+    }
     setActing(loop.id)
     try {
-      const res = await fetch(`/api/loops/${loop.id}/send`, { method: 'POST' })
+      const res = await fetch(`/api/loops/${loop.id}/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to_email: to }),
+      })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Send failed')
       setLoops(prev => prev.filter(l => l.id !== loop.id))
@@ -235,11 +244,19 @@ export function ApprovalsQueue() {
 
             {/* Actions */}
             {!isEditing && (
-              <div className="px-5 pb-4 flex gap-2">
-                {/* Feature 1: real Gmail send */}
+              <div className="px-5 pb-4 space-y-2">
+                {/* Recipient email */}
+                <input
+                  type="email"
+                  placeholder="Recipient email (e.g. ankit@company.com)"
+                  value={toEmails[loop.id] ?? ''}
+                  onChange={e => setToEmails(prev => ({ ...prev, [loop.id]: e.target.value }))}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/10 focus:border-[#1a1a1a]/30"
+                />
+              <div className="flex gap-2">
                 <button
                   onClick={() => handleSend(loop)}
-                  disabled={isActing}
+                  disabled={isActing || !toEmails[loop.id]?.includes('@')}
                   className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 shadow-sm"
                 >
                   <Send size={13} />
@@ -260,6 +277,7 @@ export function ApprovalsQueue() {
                 >
                   <X size={15} />
                 </button>
+              </div>
               </div>
             )}
           </div>

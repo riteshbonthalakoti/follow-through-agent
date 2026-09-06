@@ -76,14 +76,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   // Refresh token if needed
   const accessToken = await refreshTokenIfNeeded(conn)
 
+  // Determine recipient — body.to_email overrides, otherwise use counterparty (must be valid email)
+  const toEmail: string = body.to_email || loop.counterparty_email || loop.counterparty
+  const toField = toEmail.includes('@') ? toEmail : conn.gmail_email // fallback: send to self for demo
+
   // Build and send email
   const subject = `Following up: ${loop.description}`
-  const rawEmail = buildEmail(
-    conn.gmail_email,
-    `${loop.counterparty} <${loop.counterparty}>`,
-    subject,
-    loop.next_action
-  )
+  const rawEmail = buildEmail(conn.gmail_email, toField, subject, loop.next_action)
 
   const gmailRes = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
     method: 'POST',
