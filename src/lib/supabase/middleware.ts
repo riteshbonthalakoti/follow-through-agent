@@ -35,9 +35,17 @@ export async function updateSession(request: NextRequest) {
 
   const url = request.nextUrl.clone()
   const isProtected = url.pathname.startsWith('/dashboard') || url.pathname.startsWith('/approvals')
+  const isLoginPage = url.pathname === '/login'
 
+  // Unauthenticated → bounce to login
   if (isProtected && !user) {
     url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
+
+  // Authenticated → bounce away from login
+  if (isLoginPage && user) {
+    url.pathname = '/dashboard'
     return NextResponse.redirect(url)
   }
 
