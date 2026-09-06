@@ -1,64 +1,194 @@
 {
-  "openapi": "3.0.3",
+  "openapi": "3.0.0",
   "info": {
-    "title": "FollowThrough Agent API",
+    "title": "FollowThrough API",
     "version": "1.0.0",
-    "description": "Manage follow-up loops — track commitments, update states, draft follow-ups."
+    "description": "API for managing follow-up loops, scanning Gmail for commitments, and generating AI email drafts"
   },
-  "servers": [{ "url": "https://follow-through-agent.vercel.app" }],
+  "servers": [
+    { "url": "https://follow-through-agent.vercel.app" }
+  ],
   "paths": {
     "/api/loops": {
       "get": {
         "operationId": "listLoops",
-        "summary": "List all loops for a user",
+        "summary": "List all open loops for a user",
         "parameters": [
-          { "name": "owner_id", "in": "query", "required": true, "schema": { "type": "string" }, "description": "User ID to fetch loops for" },
-          { "name": "state", "in": "query", "required": false, "schema": { "type": "string", "enum": ["waiting","due","overdue","escalated","closed"] } }
+          {
+            "name": "x-internal-secret",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Internal API secret"
+          },
+          {
+            "name": "owner_id",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "User ID to list loops for"
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "enum": ["waiting", "due", "overdue", "escalated", "closed"] },
+            "description": "Filter by loop state"
+          }
         ],
         "responses": {
           "200": {
             "description": "List of loops",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoopList" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "loops": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Loop" }
+                    },
+                    "count": { "type": "integer" }
+                  }
+                }
+              }
+            }
           }
         }
       },
       "post": {
         "operationId": "createLoop",
-        "summary": "Create a new loop",
+        "summary": "Create a new follow-up loop",
+        "parameters": [
+          {
+            "name": "x-internal-secret",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateLoop" } } }
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["counterparty", "description", "expected_by", "direction", "source", "owner_id"],
+                "properties": {
+                  "owner_id": { "type": "string", "description": "User ID who owns this loop" },
+                  "counterparty": { "type": "string", "description": "Name of the person involved" },
+                  "description": { "type": "string", "description": "What is owed or pending" },
+                  "expected_by": { "type": "string", "format": "date-time", "description": "ISO datetime deadline" },
+                  "direction": { "type": "string", "enum": ["inbound", "outbound"], "description": "inbound = they owe you, outbound = you owe them" },
+                  "source": { "type": "string", "enum": ["email", "manual", "voice", "calendar"] },
+                  "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+                }
+              }
+            }
+          }
         },
         "responses": {
-          "200": { "description": "Created loop", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Loop" } } } }
+          "201": {
+            "description": "Loop created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "loop": { "$ref": "#/components/schemas/Loop" }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
-    "/api/loops/{id}/state": {
-      "patch": {
-        "operationId": "transitionLoopState",
-        "summary": "Transition a loop to a new state",
-        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+    "/api/gmail/scan": {
+      "post": {
+        "operationId": "scanGmail",
+        "summary": "Scan Gmail inbox for commitment loops and auto-create them",
+        "parameters": [
+          {
+            "name": "x-internal-secret",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "type": "object", "properties": { "to": { "type": "string", "enum": ["waiting","due","overdue","escalated","closed"] } }, "required": ["to"] } } }
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email"],
+                "properties": {
+                  "email": { "type": "string", "description": "Gmail address to scan" }
+                }
+              }
+            }
+          }
         },
         "responses": {
-          "200": { "description": "Updated loop", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Loop" } } } }
+          "200": {
+            "description": "Scan results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "loops_created": { "type": "integer" },
+                    "threads_scanned": { "type": "integer" },
+                    "detected": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
-    "/api/loops/{id}": {
-      "patch": {
-        "operationId": "updateLoop",
-        "summary": "Update loop fields (e.g. draft follow-up text)",
-        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+    "/api/lyzr/draft": {
+      "post": {
+        "operationId": "generateDraft",
+        "summary": "Generate an AI follow-up email draft for a loop",
+        "parameters": [
+          {
+            "name": "x-internal-secret",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "type": "object", "properties": { "next_action": { "type": "string", "nullable": true }, "description": { "type": "string" } } } } }
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["loop_id"],
+                "properties": {
+                  "loop_id": { "type": "string", "description": "Loop UUID to draft follow-up for" }
+                }
+              }
+            }
+          }
         },
         "responses": {
-          "200": { "description": "Updated loop", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Loop" } } } }
+          "200": {
+            "description": "Generated draft",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "draft": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -72,32 +202,14 @@
           "owner_id": { "type": "string" },
           "counterparty": { "type": "string" },
           "description": { "type": "string" },
-          "state": { "type": "string", "enum": ["waiting","due","overdue","escalated","closed"] },
-          "next_action": { "type": "string", "nullable": true },
-          "expected_by": { "type": "string", "format": "date" },
-          "direction": { "type": "string", "enum": ["inbound","outbound"] },
+          "expected_by": { "type": "string", "format": "date-time" },
+          "direction": { "type": "string", "enum": ["inbound", "outbound"] },
           "source": { "type": "string" },
+          "state": { "type": "string", "enum": ["waiting", "due", "overdue", "escalated", "closed"] },
+          "confidence": { "type": "number" },
           "nudge_count": { "type": "integer" },
-          "last_action_at": { "type": "string", "format": "date-time" },
+          "next_action": { "type": "string", "nullable": true },
           "created_at": { "type": "string", "format": "date-time" }
-        }
-      },
-      "LoopList": {
-        "type": "object",
-        "properties": {
-          "loops": { "type": "array", "items": { "$ref": "#/components/schemas/Loop" } },
-          "count": { "type": "integer" }
-        }
-      },
-      "CreateLoop": {
-        "type": "object",
-        "required": ["owner_id", "counterparty", "description", "expected_by"],
-        "properties": {
-          "owner_id": { "type": "string" },
-          "counterparty": { "type": "string" },
-          "description": { "type": "string" },
-          "expected_by": { "type": "string", "format": "date" },
-          "direction": { "type": "string", "enum": ["inbound","outbound"], "default": "outbound" }
         }
       }
     }

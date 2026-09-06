@@ -152,7 +152,7 @@ export function AddLoopDialog({ open, onClose, onAdded }: AddLoopDialogProps) {
         description:  parsed.description  ?? '',
         expected_by:  parsed.expected_by  ?? '',
         direction:    parsed.direction    ?? 'inbound',
-        source:       'manual',
+        source:       'voice',
       })
       setVoiceHint('✓ Extracted from your recording — review and confirm')
       setRecordState('idle')

@@ -12,9 +12,13 @@ function serviceDb() {
 }
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const internalSecret = request.headers.get('x-internal-secret')
+  const isInternal = internalSecret === process.env.MCP_SECRET
+  if (!isInternal) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
   const { loop_id, agent_id: clientAgentId } = await request.json()
   const agent_id = clientAgentId ?? process.env.LYZR_AGENT_ID
@@ -22,7 +26,9 @@ export async function POST(request: NextRequest) {
   if (!agent_id) return NextResponse.json({ error: 'LYZR_AGENT_ID not configured' }, { status: 500 })
 
   const db = serviceDb()
-  const { data: loop, error } = await db.from('loops').select('*').eq('id', loop_id).eq('owner_id', user.id).single()
+  // Internal calls skip owner_id check (agent knows the loop_id directly)
+  const loopQuery = db.from('loops').select('*').eq('id', loop_id)
+  const { data: loop, error } = await loopQuery.single()
   if (error || !loop) return NextResponse.json({ error: 'Loop not found' }, { status: 404 })
 
   try {

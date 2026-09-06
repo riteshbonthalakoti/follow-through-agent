@@ -23,6 +23,11 @@ async function resolveOwnerId(request: NextRequest, body?: Record<string, unknow
 }
 
 export async function GET(request: NextRequest) {
+  // Allow internal secret for agent tool calls
+  const internalSecret = request.headers.get('x-internal-secret')
+  if (internalSecret && internalSecret !== process.env.MCP_SECRET) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
   const owner_id = await resolveOwnerId(request)
   if (!owner_id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 

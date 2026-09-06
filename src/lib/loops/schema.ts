@@ -3,7 +3,7 @@ import type { Loop, CreateLoopInput, LoopState, LoopDirection, LoopSource } from
 
 export const loopStateSchema = z.enum(['waiting', 'due', 'overdue', 'escalated', 'closed'])
 export const loopDirectionSchema = z.enum(['inbound', 'outbound'])
-export const loopSourceSchema = z.enum(['email', 'manual', 'voice'])
+export const loopSourceSchema = z.enum(['email', 'manual', 'voice', 'calendar'])
 
 export const createLoopSchema = z.object({
   description:   z.string().min(1).max(500),
