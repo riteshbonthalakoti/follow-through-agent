@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Image from 'next/image'
@@ -8,6 +8,15 @@ import { ArrowRight, Loader2, Mail, ShieldCheck } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
+
+  // Redirect already-authenticated users away from login
+  useEffect(() => {
+    const sb = createClient()
+    sb.auth.getSession().then(({ data: { session } }) => {
+      if (session) router.replace('/dashboard')
+    })
+  }, [router])
+
   const [email, setEmail] = useState('')
   const [otp, setOtp] = useState('')
   const [step, setStep] = useState<'email' | 'otp'>('email')
