@@ -12,12 +12,12 @@ interface AddLoopDialogProps {
 
 export function AddLoopDialog({ open, onClose, onAdded }: AddLoopDialogProps) {
   const [loading, setLoading] = useState(false)
-  const [form, setForm] = useState({ counterparty: '', description: '', expected_by: '', direction: 'inbound' })
+  const [form, setForm] = useState({ counterparty: '', description: '', expected_by: '', direction: 'inbound', source: 'manual' })
   const firstRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (open) setTimeout(() => firstRef.current?.focus(), 60)
-    if (!open) setForm({ counterparty: '', description: '', expected_by: '', direction: 'inbound' })
+    if (!open) setForm({ counterparty: '', description: '', expected_by: '', direction: 'inbound', source: 'manual' })
   }, [open])
 
   // Trap escape
@@ -38,7 +38,7 @@ export function AddLoopDialog({ open, onClose, onAdded }: AddLoopDialogProps) {
       const res = await fetch('/api/loops', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, source: 'manual', expected_by: new Date(form.expected_by).toISOString() }),
+        body: JSON.stringify({ ...form, expected_by: new Date(form.expected_by).toISOString() }),
       })
       if (!res.ok) throw new Error()
       toast.success('Loop added')
@@ -94,6 +94,28 @@ export function AddLoopDialog({ open, onClose, onAdded }: AddLoopDialogProps) {
               >
                 <Icon size={12} />
                 {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Source */}
+          <div className="flex rounded-xl border border-slate-200 p-1 gap-1 bg-slate-50">
+            {[
+              { value: 'manual',   label: 'Manual',   emoji: '✏️' },
+              { value: 'email',    label: 'Email',    emoji: '📧' },
+              { value: 'calendar', label: 'Calendar', emoji: '📅' },
+            ].map(({ value, label, emoji }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setForm(f => ({ ...f, source: value }))}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+                  form.source === value
+                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200'
+                    : 'text-slate-400 hover:text-slate-600'
+                }`}
+              >
+                <span>{emoji}</span> {label}
               </button>
             ))}
           </div>

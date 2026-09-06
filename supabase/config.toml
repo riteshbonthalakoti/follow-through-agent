@@ -233,20 +233,18 @@ otp_length = 6
 # Number of seconds before the email OTP expires (defaults to 1 hour).
 otp_expiry = 3600
 
-# Custom SMTP — requires SMTP_PASS secret: supabase secrets set SMTP_PASS=<gmail-app-password> --project-ref kifsijsuwayviigobama
-# [auth.email.smtp]
-# enabled = true
-# host = "smtp.gmail.com"
-# port = 587
-# user = "riteshbonthalakoti@gmail.com"
-# pass = "env(SMTP_PASS)"
-# admin_email = "riteshbonthalakoti@gmail.com"
-# sender_name = "FollowThrough"
+[auth.email.smtp]
+enabled = true
+host = "smtp.gmail.com"
+port = 587
+user = "riteshbonthalakoti@gmail.com"
+pass = "env(SMTP_PASS)"
+admin_email = "riteshbonthalakoti@gmail.com"
+sender_name = "FollowThrough"
 
-# Magic link email template — requires custom SMTP to be active first
-# [auth.email.template.magic_link]
-# subject = "Your FollowThrough sign-in link"
-# content_path = "./supabase/templates/magic_link.html"
+[auth.email.template.magic_link]
+subject = "Your FollowThrough sign-in link"
+content_path = "./supabase/templates/magic_link.html"
 
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]

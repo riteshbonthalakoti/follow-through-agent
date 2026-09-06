@@ -1,6 +1,6 @@
 export type LoopState = 'waiting' | 'due' | 'overdue' | 'escalated' | 'closed'
 export type LoopDirection = 'inbound' | 'outbound'
-export type LoopSource = 'email' | 'manual' | 'voice'
+export type LoopSource = 'email' | 'manual' | 'voice' | 'calendar'
 
 export interface Loop {
   id: string

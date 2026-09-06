@@ -2,10 +2,17 @@
 
 import { useState } from 'react'
 import { ArrowDownLeft, ArrowUpRight, CalendarClock, CheckCircle2, Trash2, MessageSquare, MoreHorizontal } from 'lucide-react'
-import { formatDistanceToNow, isPast, isToday, isTomorrow } from 'date-fns'
+import { formatDistanceToNow, isPast, isToday, isTomorrow, differenceInDays } from 'date-fns'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import type { Loop } from '@/types/loop'
+
+export function computePriority(loop: Loop): number {
+  const daysOverdue = Math.max(0, differenceInDays(new Date(), new Date(loop.expected_by)))
+  return (Math.min(daysOverdue, 14) / 14) * 0.4
+    + (1 - (loop.confidence ?? 0.5)) * 0.3
+    + (Math.min(loop.nudge_count ?? 0, 5) / 5) * 0.3
+}
 
 const STATE_CONFIG: Record<string, { badge: string; left: string }> = {
   waiting:   { badge: 'bg-blue-50 text-blue-600 border-blue-100',      left: 'bg-blue-400' },
@@ -50,6 +57,8 @@ export function LoopCard({ loop, onUpdate, onClose }: LoopCardProps) {
   const cfg = STATE_CONFIG[loop.state] ?? STATE_CONFIG.waiting
   const isOverdue = loop.state === 'overdue'
   const conf = loop.confidence ?? 0
+  const priority = computePriority(loop)
+  const isHot = priority > 0.7
 
   const handleClose = async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -114,6 +123,7 @@ export function LoopCard({ loop, onUpdate, onClose }: LoopCardProps) {
               {loop.counterparty[0]?.toUpperCase() ?? '?'}
             </div>
             <p className="text-sm font-semibold text-slate-800 truncate">{loop.counterparty}</p>
+            {isHot && <span title={`Priority ${Math.round(priority * 100)}%`} className="text-xs shrink-0">🔥</span>}
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
@@ -178,10 +188,10 @@ export function LoopCard({ loop, onUpdate, onClose }: LoopCardProps) {
 
         {/* Badges row */}
         {(loop.nudge_count > 0 || loop.next_action) && (
-          <div className="flex gap-1.5 mt-2.5 pl-9">
+          <div className="flex gap-1.5 mt-2.5 pl-9 flex-wrap">
             {loop.nudge_count > 0 && (
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-50 text-orange-500 border border-orange-100 font-medium">
-                {loop.nudge_count} nudge{loop.nudge_count !== 1 ? 's' : ''}
+                {loop.nudge_count === 1 ? '2nd nudge' : loop.nudge_count === 2 ? '3rd nudge' : `${loop.nudge_count + 1}th nudge`}
               </span>
             )}
             {loop.next_action && (

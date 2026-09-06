@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
-import { CheckCircle2, Edit3, X, Sparkles, Clock, Send } from 'lucide-react'
+import { CheckCircle2, Edit3, X, Sparkles, Clock, Send, Flame } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import type { Loop } from '@/types/loop'
@@ -12,6 +12,20 @@ const STATE_BADGE: Record<string, string> = {
   due:       'bg-amber-50 text-amber-600 border-amber-100',
   overdue:   'bg-red-50 text-red-500 border-red-100',
   escalated: 'bg-violet-50 text-violet-600 border-violet-100',
+}
+
+function nudgeLabel(n: number) {
+  if (n === 0) return 'First reach-out'
+  if (n === 1) return '2nd nudge'
+  if (n === 2) return '3rd nudge'
+  return `${n + 1}th nudge`
+}
+
+function makeTemplate(type: 'gentle' | 'firm' | 'final', name: string, date: string) {
+  const d = new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  if (type === 'gentle') return `Hi ${name},\n\nJust circling back on this — wanted to make sure it didn't slip through the cracks.\n\nWould love to hear back when you get a chance.\n\nThanks`
+  if (type === 'firm')   return `Hi ${name},\n\nI need this resolved by ${d}. Could you please confirm or let me know if there's a blocker?\n\nAppreciate your prompt response.`
+  return `Hi ${name},\n\nThis is my final follow-up before I need to escalate or close this out. Please respond by ${d}.\n\nThank you.`
 }
 
 export function ApprovalsQueue() {
@@ -50,18 +64,18 @@ export function ApprovalsQueue() {
     return () => { sb.removeChannel(ch) }
   }, [])
 
-  const handleApprove = async (loop: Loop) => {
+  // Feature 1: real send via Gmail API
+  const handleSend = async (loop: Loop) => {
     setActing(loop.id)
     try {
-      const res = await fetch(`/api/loops/${loop.id}/state`, {
-        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: 'escalated' }),
-      })
-      if (!res.ok) throw new Error()
+      const res = await fetch(`/api/loops/${loop.id}/send`, { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Send failed')
       setLoops(prev => prev.filter(l => l.id !== loop.id))
-      toast.success('Approved & sent')
-    } catch { toast.error('Failed to approve') }
-    finally { setActing(null) }
+      toast.success('Email sent via Gmail!')
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Failed to send')
+    } finally { setActing(null) }
   }
 
   const handleSaveEdit = async (loop: Loop) => {
@@ -119,9 +133,7 @@ export function ApprovalsQueue() {
     <div className="space-y-4 max-w-2xl">
       <div className="flex items-center gap-2 mb-6">
         <Sparkles size={16} className="text-violet-500" />
-        <p className="text-sm text-slate-500">
-          AI-drafted follow-ups — review each one before sending.
-        </p>
+        <p className="text-sm text-slate-500">AI-drafted follow-ups — review each one before sending.</p>
         <span className="ml-auto text-xs font-semibold px-2.5 py-1 rounded-full bg-violet-50 text-violet-600 border border-violet-100">
           {loops.length} pending
         </span>
@@ -131,6 +143,7 @@ export function ApprovalsQueue() {
         const badgeClass = STATE_BADGE[loop.state] ?? STATE_BADGE.waiting
         const isEditing = editingId === loop.id
         const isActing = acting === loop.id
+        const nudges = loop.nudge_count ?? 0
 
         return (
           <div
@@ -151,13 +164,17 @@ export function ApprovalsQueue() {
                   <span className={cn('text-[10px] font-semibold px-2 py-0.5 rounded-full border', badgeClass)}>
                     {loop.state.charAt(0).toUpperCase() + loop.state.slice(1)}
                   </span>
+                  {/* Feature 4: nudge history badge */}
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-orange-50 text-orange-500 border border-orange-100 flex items-center gap-1">
+                    <Clock size={9} />
+                    {nudgeLabel(nudges)}
+                  </span>
                 </div>
                 <p className="text-xs text-slate-400 truncate mt-0.5">{loop.description}</p>
               </div>
-              <div className="flex items-center gap-1 text-xs text-slate-400 shrink-0">
-                <Clock size={11} />
-                {loop.nudge_count ?? 0} nudges
-              </div>
+              {loop.state === 'overdue' && (
+                <span title="High priority" className="text-base shrink-0">🔥</span>
+              )}
             </div>
 
             {/* Draft content */}
@@ -168,9 +185,27 @@ export function ApprovalsQueue() {
               </div>
 
               {isEditing ? (
-                <div className="space-y-2">
+                <div className="space-y-3">
+                  {/* Feature 3: Template picker */}
+                  <div className="flex gap-2 flex-wrap">
+                    {(['gentle', 'firm', 'final'] as const).map(t => (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setEditText(makeTemplate(t, loop.counterparty, loop.expected_by))}
+                        className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-all capitalize"
+                      >
+                        {t === 'gentle' && '🌿 '}
+                        {t === 'firm' && '⚡ '}
+                        {t === 'final' && '🚨 '}
+                        {t.charAt(0).toUpperCase() + t.slice(1)}
+                      </button>
+                    ))}
+                    <span className="text-[10px] text-slate-300 self-center">quick-fill templates</span>
+                  </div>
+
                   <textarea
-                    rows={5}
+                    rows={6}
                     value={editText}
                     onChange={e => setEditText(e.target.value)}
                     className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 resize-none transition-all"
@@ -201,13 +236,14 @@ export function ApprovalsQueue() {
             {/* Actions */}
             {!isEditing && (
               <div className="px-5 pb-4 flex gap-2">
+                {/* Feature 1: real Gmail send */}
                 <button
-                  onClick={() => handleApprove(loop)}
+                  onClick={() => handleSend(loop)}
                   disabled={isActing}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-700 transition-colors disabled:opacity-50 shadow-sm"
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 shadow-sm"
                 >
                   <Send size={13} />
-                  Approve & Send
+                  Approve &amp; Send
                 </button>
                 <button
                   onClick={() => { setEditingId(loop.id); setEditText(loop.next_action ?? '') }}

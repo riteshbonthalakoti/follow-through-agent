@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
-import { LoopCard } from './LoopCard'
+import { LoopCard, computePriority } from './LoopCard'
 import { AddLoopDialog } from './AddLoopDialog'
 import { createClient } from '@/lib/supabase/client'
 import type { Loop, LoopState } from '@/types/loop'
@@ -92,7 +92,10 @@ export function LoopBoard({ externalDialogOpen, onExternalDialogClose }: LoopBoa
       <div className="overflow-x-auto -mx-1 px-1 pb-2">
         <div className="flex gap-4" style={{ minWidth: 'max(640px, 100%)' }}>
           {COLUMNS.map(({ state, label, accent, pill, bar, emptyIcon, emptyText }) => {
-            const items = loops.filter(l => l.state === state)
+            const raw = loops.filter(l => l.state === state)
+            const items = state === 'overdue'
+              ? [...raw].sort((a, b) => computePriority(b) - computePriority(a))
+              : raw
             return (
               <div key={state} className="flex-1 min-w-[260px] flex flex-col gap-3">
                 {/* Column header */}
