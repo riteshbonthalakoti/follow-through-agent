@@ -18,12 +18,13 @@ export async function callLyzrAgent(agentId: string, messages: LyzrMessage[], se
   const apiKey = process.env.LYZR_API_KEY
   if (!apiKey) throw new Error('LYZR_API_KEY not configured')
 
-  // Lyzr v3 payload: agent_id + session_id + user_id + message (string, not messages array)
   const lastUserMsg = [...messages].reverse().find(m => m.role === 'user')?.content ?? ''
+  // session_id format matches Lyzr Studio: {agent_id}-{random}
+  const sid = sessionId ?? `${agentId}-${Math.random().toString(36).slice(2, 10)}`
   const body: Record<string, unknown> = {
+    user_id: process.env.LYZR_USER_ID ?? 'bonthalamadhavi1@gmail.com',
     agent_id: agentId,
-    session_id: sessionId ?? agentId,
-    user_id: 'followthrough-user',
+    session_id: sid,
     message: lastUserMsg,
   }
 
