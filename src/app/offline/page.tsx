@@ -3,7 +3,7 @@ import Link from 'next/link'
 
 export default function OfflinePage() {
   return (
-    <main className="min-h-screen bg-[#F7F6F3] flex flex-col items-center justify-center px-6 text-center">
+    <main className="min-h-screen bg-[#F8F7F4] flex flex-col items-center justify-center px-6 text-center">
       <div className="mb-6 opacity-60">
         <Image src="/logo.svg" alt="FollowThrough" width={48} height={48} />
       </div>
@@ -13,7 +13,7 @@ export default function OfflinePage() {
       </p>
       <Link
         href="/dashboard"
-        className="px-5 py-2.5 rounded-xl bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700 transition-colors shadow-sm"
+        className="px-5 py-2.5 rounded-xl bg-[#1a1a1a] text-white text-sm font-semibold hover:bg-[#1a1a1a]/85 transition-colors shadow-sm"
       >
         Try again
       </Link>

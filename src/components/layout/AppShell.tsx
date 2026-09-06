@@ -119,7 +119,7 @@ function UserMenu({ userEmail, onSignOut }: { userEmail: string; onSignOut: () =
         onClick={() => setOpen(o => !o)}
         className="flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-xl hover:bg-slate-100 transition-colors"
       >
-        <div className="w-7 h-7 rounded-full bg-violet-100 text-violet-700 text-xs font-bold flex items-center justify-center">
+        <div className="w-7 h-7 rounded-full bg-[#1a1a1a]/8 text-[#1a1a1a]/70 text-xs font-bold flex items-center justify-center">
           {initial}
         </div>
         <ChevronDown size={13} className={cn('text-slate-400 transition-transform', open && 'rotate-180')} />
@@ -166,7 +166,7 @@ export function AppShell({ userEmail, children }: AppShellProps) {
   ]
 
   return (
-    <div className="min-h-screen bg-[#F7F6F3]">
+    <div className="min-h-screen bg-[#F8F7F4]">
       {/* Top nav */}
       <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-slate-200/60 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-4">
@@ -204,7 +204,7 @@ export function AppShell({ userEmail, children }: AppShellProps) {
 
             <button
               onClick={() => setAddOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-600 text-white text-xs font-semibold hover:bg-violet-700 transition-colors shadow-sm"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1a1a1a] text-white text-xs font-semibold hover:bg-[#1a1a1a]/85 transition-colors shadow-sm"
             >
               <Plus size={13} />
               <span className="hidden sm:inline">Add Loop</span>
@@ -228,7 +228,7 @@ export function AppShell({ userEmail, children }: AppShellProps) {
             href={href}
             className={cn(
               'flex-1 flex flex-col items-center gap-1 py-3 text-[11px] font-medium transition-colors',
-              pathname === href ? 'text-violet-600' : 'text-slate-400 hover:text-slate-600'
+              pathname === href ? 'text-[#1a1a1a]' : 'text-slate-400 hover:text-slate-600'
             )}
           >
             <Icon size={20} />
@@ -237,9 +237,9 @@ export function AppShell({ userEmail, children }: AppShellProps) {
         ))}
         <button
           onClick={() => setAddOpen(true)}
-          className="flex-1 flex flex-col items-center gap-1 py-3 text-[11px] font-medium text-violet-600"
+          className="flex-1 flex flex-col items-center gap-1 py-3 text-[11px] font-medium text-[#1a1a1a]"
         >
-          <div className="w-8 h-8 rounded-full bg-violet-600 text-white flex items-center justify-center -mt-1 shadow-md">
+          <div className="w-8 h-8 rounded-full bg-[#1a1a1a] text-white flex items-center justify-center -mt-1 shadow-md">
             <Plus size={18} />
           </div>
         </button>

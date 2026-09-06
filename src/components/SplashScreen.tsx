@@ -20,10 +20,10 @@ export function SplashScreen() {
     setPhase('show')
     sessionStorage.setItem('splash-shown', '1')
 
-    // Begin exit after 2.4s
-    const t1 = setTimeout(() => setPhase('exit'), 2400)
+    // Begin exit after 2.2s
+    const t1 = setTimeout(() => setPhase('exit'), 2200)
     // Unmount after exit animation completes
-    const t2 = setTimeout(() => setPhase('hidden'), 3000)
+    const t2 = setTimeout(() => setPhase('hidden'), 2800)
 
     return () => { clearTimeout(t1); clearTimeout(t2) }
   }, [])
@@ -32,9 +32,9 @@ export function SplashScreen() {
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#F7F6F3]"
+      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#F8F7F4]"
       style={{
-        transition: 'opacity 0.55s cubic-bezier(0.4,0,0.2,1), transform 0.55s cubic-bezier(0.4,0,0.2,1)',
+        transition: 'opacity 0.5s cubic-bezier(0.4,0,0.2,1), transform 0.5s cubic-bezier(0.4,0,0.2,1)',
         opacity: phase === 'exit' ? 0 : 1,
         transform: phase === 'exit' ? 'scale(1.04)' : 'scale(1)',
         pointerEvents: phase === 'exit' ? 'none' : 'auto',
@@ -43,36 +43,32 @@ export function SplashScreen() {
       {/* Logo mark with draw animation */}
       <div className="relative">
         <svg
-          width="80"
-          height="80"
+          width="76"
+          height="76"
           viewBox="0 0 100 100"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           className="splash-logo"
         >
-          {/* Violet rounded square bg */}
-          <rect
-            width="100" height="100" rx="22" fill="#7c3aed"
-            className="splash-bg"
-          />
+          {/* Near-black rounded square bg */}
+          <rect width="100" height="100" rx="24" fill="#1a1a1a" className="splash-bg" />
 
           {/* Outer arc */}
           <circle
-            cx="50" cy="50" r="27"
-            stroke="rgba(255,255,255,0.35)"
-            strokeWidth="5"
+            cx="50" cy="50" r="30"
+            stroke="rgba(255,255,255,0.45)"
+            strokeWidth="7"
             strokeLinecap="round"
-            strokeDasharray="140 30"
-            strokeDashoffset="-5"
-            transform="rotate(-30 50 50)"
+            strokeDasharray="150 38"
+            transform="rotate(-38 50 50)"
             className="splash-arc"
           />
 
           {/* Arrow tip */}
           <path
-            d="M72 28 L80 36 L70 38"
-            stroke="rgba(255,255,255,0.35)"
-            strokeWidth="5"
+            d="M74 25 L83 33 L72 36"
+            stroke="rgba(255,255,255,0.45)"
+            strokeWidth="7"
             strokeLinecap="round"
             strokeLinejoin="round"
             className="splash-arrow"
@@ -80,9 +76,9 @@ export function SplashScreen() {
 
           {/* Checkmark — draws last */}
           <path
-            d="M36 50 L46 61 L64 39"
+            d="M34 51 L45 63 L68 38"
             stroke="white"
-            strokeWidth="6"
+            strokeWidth="8"
             strokeLinecap="round"
             strokeLinejoin="round"
             className="splash-check"
@@ -91,9 +87,9 @@ export function SplashScreen() {
       </div>
 
       {/* Wordmark fades in after logo */}
-      <div className="mt-5 splash-wordmark">
-        <p className="text-slate-800 font-bold text-lg tracking-tight">FollowThrough</p>
-        <p className="text-slate-400 text-xs text-center mt-0.5">Nothing falls through the cracks</p>
+      <div className="mt-6 splash-wordmark text-center">
+        <p className="text-[#1a1a1a] font-bold text-lg tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>FollowThrough</p>
+        <p className="text-[#1a1a1a]/40 text-xs mt-0.5">Nothing falls through the cracks</p>
       </div>
 
       <style>{`
@@ -118,7 +114,7 @@ export function SplashScreen() {
           animation: drawArc 0.7s 0.35s cubic-bezier(0.4,0,0.2,1) forwards;
         }
         @keyframes drawArc {
-          to { stroke-dasharray: 140 30; }
+          to { stroke-dasharray: 150 38; }
         }
 
         .splash-arrow {

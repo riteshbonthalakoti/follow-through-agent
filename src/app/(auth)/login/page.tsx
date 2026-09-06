@@ -35,7 +35,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#F7F6F3] flex">
+    <main className="min-h-screen bg-[#F8F7F4] flex">
       {/* Left panel — branding */}
       <div className="hidden lg:flex flex-col justify-between w-[420px] shrink-0 bg-white border-r border-slate-200 p-12">
         <div className="flex items-center gap-2.5">
@@ -50,7 +50,7 @@ export default function LoginPage() {
             { title: 'Gmail auto-detect', body: 'Connect your inbox and watch loops surface automatically.' },
           ].map((item, i) => (
             <div key={i} className="flex gap-3">
-              <div className="w-6 h-6 rounded-full bg-violet-100 text-violet-600 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+              <div className="w-6 h-6 rounded-full bg-[#7C5CFC]/10 text-[#7C5CFC] text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
                 {i + 1}
               </div>
               <div>
@@ -88,7 +88,7 @@ export default function LoginPage() {
                     placeholder="you@example.com"
                     required
                     autoFocus
-                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-slate-200 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all shadow-sm"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-slate-200 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/10 focus:border-[#1a1a1a]/30 transition-all shadow-sm"
                   />
                 </div>
 
@@ -101,7 +101,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading || !email}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700 transition-colors disabled:opacity-50 shadow-sm"
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#1a1a1a] text-white text-sm font-semibold hover:bg-[#1a1a1a]/85 transition-colors disabled:opacity-50 shadow-sm"
                 >
                   {loading ? <Loader2 size={15} className="animate-spin" /> : <><span>Send magic code</span><ArrowRight size={14} /></>}
                 </button>
@@ -109,8 +109,8 @@ export default function LoginPage() {
             </>
           ) : (
             <>
-              <div className="w-12 h-12 rounded-2xl bg-violet-50 border border-violet-100 flex items-center justify-center mb-6">
-                <ShieldCheck size={22} className="text-violet-600" />
+              <div className="w-12 h-12 rounded-2xl bg-[#27AE60]/10 border border-[#27AE60]/15 flex items-center justify-center mb-6">
+                <ShieldCheck size={22} className="text-[#27AE60]" />
               </div>
               <h1 className="text-2xl font-bold text-slate-900 mb-1">Check your email</h1>
               <p className="text-sm text-slate-400 mb-8">
@@ -129,7 +129,7 @@ export default function LoginPage() {
                   placeholder="· · · · · ·"
                   required
                   autoFocus
-                  className="w-full px-4 py-3.5 rounded-xl bg-white border border-slate-200 text-2xl text-slate-900 text-center tracking-[0.5em] font-mono placeholder-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all shadow-sm"
+                  className="w-full px-4 py-3.5 rounded-xl bg-white border border-slate-200 text-2xl text-slate-900 text-center tracking-[0.5em] font-mono placeholder-slate-200 focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/10 focus:border-[#1a1a1a]/30 transition-all shadow-sm"
                 />
 
                 {error && (
@@ -141,7 +141,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading || otp.length !== 6}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700 transition-colors disabled:opacity-50 shadow-sm"
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#1a1a1a] text-white text-sm font-semibold hover:bg-[#1a1a1a]/85 transition-colors disabled:opacity-50 shadow-sm"
                 >
                   {loading ? <Loader2 size={15} className="animate-spin" /> : 'Sign In →'}
                 </button>

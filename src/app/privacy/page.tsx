@@ -27,7 +27,7 @@ export default function PrivacyPage() {
 
         <div>
           <h2 className="font-semibold text-slate-900 mb-2">Contact</h2>
-          <p>Questions? Email <a href="mailto:ritesh@dharanova.com" className="text-violet-600 underline">ritesh@dharanova.com</a></p>
+          <p>Questions? Email <a href="mailto:ritesh@dharanova.com" className="text-[#1a1a1a] underline underline-offset-2">ritesh@dharanova.com</a></p>
         </div>
       </section>
     </main>

@@ -11,7 +11,7 @@ const STATE_BADGE: Record<string, string> = {
   waiting:   'bg-blue-50 text-blue-600 border-blue-100',
   due:       'bg-amber-50 text-amber-600 border-amber-100',
   overdue:   'bg-red-50 text-red-500 border-red-100',
-  escalated: 'bg-violet-50 text-violet-600 border-violet-100',
+  escalated: 'bg-[#7C5CFC]/10 text-[#7C5CFC] border-[#7C5CFC]/15',
 }
 
 function nudgeLabel(n: number) {
@@ -132,9 +132,9 @@ export function ApprovalsQueue() {
   return (
     <div className="space-y-4 max-w-2xl">
       <div className="flex items-center gap-2 mb-6">
-        <Sparkles size={16} className="text-violet-500" />
+        <Sparkles size={16} className="text-[#7C5CFC]" />
         <p className="text-sm text-slate-500">AI-drafted follow-ups — review each one before sending.</p>
-        <span className="ml-auto text-xs font-semibold px-2.5 py-1 rounded-full bg-violet-50 text-violet-600 border border-violet-100">
+        <span className="ml-auto text-xs font-semibold px-2.5 py-1 rounded-full bg-[#7C5CFC]/10 text-[#7C5CFC] border border-[#7C5CFC]/15">
           {loops.length} pending
         </span>
       </div>
@@ -155,7 +155,7 @@ export function ApprovalsQueue() {
           >
             {/* Card header */}
             <div className="px-5 pt-4 pb-3 border-b border-slate-100 flex items-start gap-3">
-              <div className="w-9 h-9 rounded-full bg-violet-100 text-violet-700 text-sm font-bold flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 rounded-full bg-[#1a1a1a]/8 text-[#1a1a1a]/70 text-sm font-bold flex items-center justify-center shrink-0">
                 {loop.counterparty[0]?.toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
@@ -180,8 +180,8 @@ export function ApprovalsQueue() {
             {/* Draft content */}
             <div className="px-5 py-4">
               <div className="flex items-center gap-1.5 mb-2.5">
-                <Sparkles size={11} className="text-violet-400" />
-                <span className="text-[10px] font-semibold uppercase tracking-wide text-violet-400">AI draft</span>
+                <Sparkles size={11} className="text-[#7C5CFC]" />
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-[#7C5CFC]">AI draft</span>
               </div>
 
               {isEditing ? (
@@ -208,13 +208,13 @@ export function ApprovalsQueue() {
                     rows={6}
                     value={editText}
                     onChange={e => setEditText(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 resize-none transition-all"
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/10 focus:border-[#1a1a1a]/30 resize-none transition-all"
                   />
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleSaveEdit(loop)}
                       disabled={isActing}
-                      className="px-4 py-2 rounded-xl bg-violet-600 text-white text-xs font-semibold hover:bg-violet-700 transition-colors disabled:opacity-50"
+                      className="px-4 py-2 rounded-xl bg-[#1a1a1a] text-white text-xs font-semibold hover:bg-[#1a1a1a]/85 transition-colors disabled:opacity-50"
                     >
                       Save changes
                     </button>

@@ -223,7 +223,7 @@ export function AddLoopDialog({ open, onClose, onAdded }: AddLoopDialogProps) {
               onClick={() => setMode(m)}
               className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-all border-b-2 ${
                 mode === m
-                  ? 'border-violet-600 text-violet-600'
+                  ? 'border-[#1a1a1a] text-[#1a1a1a]'
                   : 'border-transparent text-slate-400 hover:text-slate-600'
               }`}
             >
@@ -244,8 +244,8 @@ export function AddLoopDialog({ open, onClose, onAdded }: AddLoopDialogProps) {
                   isRecording
                     ? 'bg-red-500 hover:bg-red-600 scale-110'
                     : isParsing
-                    ? 'bg-violet-200 cursor-not-allowed'
-                    : 'bg-violet-600 hover:bg-violet-700 hover:scale-105'
+                    ? 'bg-[#1a1a1a]/25 cursor-not-allowed'
+                    : 'bg-[#1a1a1a] hover:bg-[#1a1a1a]/85 hover:scale-105'
                 }`}
               >
                 {isParsing
@@ -282,16 +282,16 @@ export function AddLoopDialog({ open, onClose, onAdded }: AddLoopDialogProps) {
 
             {/* Instructions */}
             {!isRecording && !isParsing && !transcript && (
-              <div className="w-full bg-violet-50 rounded-2xl border border-violet-100 p-4 space-y-2">
-                <p className="text-xs font-semibold text-violet-700 flex items-center gap-1.5">
-                  <Wand2 size={12} /> What to say
+              <div className="w-full bg-[#7C5CFC]/6 rounded-2xl border border-[#7C5CFC]/15 p-4 space-y-2">
+                <p className="text-xs font-semibold text-[#1a1a1a]/80 flex items-center gap-1.5">
+                  <Wand2 size={12} className="text-[#7C5CFC]" /> What to say
                 </p>
-                <ul className="text-xs text-violet-600 space-y-1.5 leading-relaxed">
+                <ul className="text-xs text-[#1a1a1a]/60 space-y-1.5 leading-relaxed">
                   <li>• <strong>Who</strong> owes you what — "Rahul needs to send the proposal"</li>
                   <li>• <strong>When</strong> you need it — "by Friday" / "end of month" / "next week"</li>
                   <li>• <strong>Direction</strong> — "I owe them" or "they owe me"</li>
                 </ul>
-                <p className="text-[10px] text-violet-400 mt-2">Example: "Priya needs to confirm the meeting by Thursday, and I'm waiting on her."</p>
+                <p className="text-[10px] text-[#1a1a1a]/35 mt-2">Example: "Priya needs to confirm the meeting by Thursday, and I'm waiting on her."</p>
               </div>
             )}
 
@@ -372,7 +372,7 @@ export function AddLoopDialog({ open, onClose, onAdded }: AddLoopDialogProps) {
                 placeholder="e.g. Rahul Sharma, TechCorp HR…"
                 value={form.counterparty}
                 onChange={e => setForm(f => ({ ...f, counterparty: e.target.value }))}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/10 focus:border-[#1a1a1a]/30 transition-all"
               />
             </div>
 
@@ -387,7 +387,7 @@ export function AddLoopDialog({ open, onClose, onAdded }: AddLoopDialogProps) {
                 placeholder="e.g. Send revised proposal PDF, confirm the meeting time…"
                 value={form.description}
                 onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all resize-none"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/10 focus:border-[#1a1a1a]/30 transition-all resize-none"
               />
             </div>
 
@@ -403,7 +403,7 @@ export function AddLoopDialog({ open, onClose, onAdded }: AddLoopDialogProps) {
                   value={form.expected_by}
                   min={new Date().toISOString().split('T')[0]}
                   onChange={e => setForm(f => ({ ...f, expected_by: e.target.value }))}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/10 focus:border-[#1a1a1a]/30 transition-all"
                 />
               </div>
               <button
@@ -427,7 +427,7 @@ export function AddLoopDialog({ open, onClose, onAdded }: AddLoopDialogProps) {
               <button
                 type="submit"
                 disabled={!canSubmit}
-                className="flex-1 py-2.5 rounded-xl bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700 transition-colors disabled:opacity-40 flex items-center justify-center gap-2 shadow-sm"
+                className="flex-1 py-2.5 rounded-xl bg-[#1a1a1a] text-white text-sm font-semibold hover:bg-[#1a1a1a]/85 transition-colors disabled:opacity-40 flex items-center justify-center gap-2 shadow-sm"
               >
                 {loading ? <><Loader2 size={14} className="animate-spin" /> Adding…</> : 'Add Loop'}
               </button>

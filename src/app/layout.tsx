@@ -40,7 +40,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#F7F6F3',
+  themeColor: '#1a1a1a',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -56,7 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
       </head>
-      <body className="bg-[#F7F6F3] text-slate-900 antialiased overscroll-none">
+      <body className="bg-[#F8F7F4] text-[#1a1a1a] antialiased overscroll-none">
         <SplashScreen />
         {children}
         <Toaster

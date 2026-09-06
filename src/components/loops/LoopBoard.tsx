@@ -12,7 +12,7 @@ const COLUMNS: { state: LoopState; label: string; accent: string; pill: string; 
   { state: 'waiting',   label: 'Waiting',   accent: 'border-slate-200', pill: 'bg-blue-50 text-blue-600',     bar: 'bg-blue-400',   emptyIcon: '⏳', emptyText: 'No loops waiting on others' },
   { state: 'due',       label: 'Due',       accent: 'border-amber-200', pill: 'bg-amber-50 text-amber-600',   bar: 'bg-amber-400',  emptyIcon: '✅', emptyText: 'Nothing due today' },
   { state: 'overdue',   label: 'Overdue',   accent: 'border-red-200',   pill: 'bg-red-50 text-red-600',       bar: 'bg-red-400',    emptyIcon: '🎉', emptyText: 'Nothing overdue — you\'re on top of it' },
-  { state: 'escalated', label: 'Escalated', accent: 'border-violet-200',pill: 'bg-violet-50 text-violet-600', bar: 'bg-violet-400', emptyIcon: '🤝', emptyText: 'No escalations needed' },
+  { state: 'escalated', label: 'Escalated', accent: 'border-[#7C5CFC]/25',pill: 'bg-[#7C5CFC]/10 text-[#7C5CFC]', bar: 'bg-[#7C5CFC]', emptyIcon: '🤝', emptyText: 'No escalations needed' },
 ]
 
 interface LoopBoardProps {

@@ -18,7 +18,7 @@ const STATE_CONFIG: Record<string, { badge: string; left: string }> = {
   waiting:   { badge: 'bg-blue-50 text-blue-600 border-blue-100',      left: 'bg-blue-400' },
   due:       { badge: 'bg-amber-50 text-amber-600 border-amber-100',   left: 'bg-amber-400' },
   overdue:   { badge: 'bg-red-50 text-red-500 border-red-100',         left: 'bg-red-400' },
-  escalated: { badge: 'bg-violet-50 text-violet-600 border-violet-100',left: 'bg-violet-400' },
+  escalated: { badge: 'bg-[#7C5CFC]/10 text-[#7C5CFC] border-[#7C5CFC]/15',left: 'bg-[#7C5CFC]' },
   closed:    { badge: 'bg-green-50 text-green-600 border-green-100',   left: 'bg-green-400' },
 }
 const STATE_LABELS: Record<string, string> = {
@@ -80,7 +80,7 @@ export function LoopCard({ loop, onUpdate, onClose }: LoopCardProps) {
   const avatarColor = [
     'bg-rose-100 text-rose-600', 'bg-orange-100 text-orange-600',
     'bg-amber-100 text-amber-600', 'bg-emerald-100 text-emerald-600',
-    'bg-sky-100 text-sky-600', 'bg-violet-100 text-violet-600',
+    'bg-sky-100 text-sky-600', 'bg-[#7C5CFC]/10 text-[#7C5CFC]',
   ][loop.counterparty.charCodeAt(0) % 6]
 
   return (
@@ -195,7 +195,7 @@ export function LoopCard({ loop, onUpdate, onClose }: LoopCardProps) {
               </span>
             )}
             {loop.next_action && (
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-violet-50 text-violet-500 border border-violet-100 font-medium">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#7C5CFC]/10 text-[#7C5CFC] border border-[#7C5CFC]/15 font-medium">
                 draft ready
               </span>
             )}
