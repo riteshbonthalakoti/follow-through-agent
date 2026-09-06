@@ -19,15 +19,44 @@ interface GmailStatus {
 function GmailBtn() {
   const [status, setStatus] = useState<GmailStatus | null>(null)
   const [scanning, setScanning] = useState(false)
+  const [connecting, setConnecting] = useState(false)
+
+  const refreshStatus = () =>
+    fetch('/api/gmail/scan').then(r => r.json()).then(setStatus).catch(() => {})
 
   useEffect(() => {
-    fetch('/api/gmail/scan').then(r => r.json()).then(setStatus).catch(() => {})
-    const p = new URLSearchParams(window.location.search)
-    if (p.get('gmail') === 'connected') {
-      toast.success('Gmail connected!')
-      window.history.replaceState({}, '', window.location.pathname)
+    refreshStatus()
+
+    // Listen for popup postMessage result
+    const onMessage = (e: MessageEvent) => {
+      if (e.origin !== window.location.origin) return
+      if (e.data?.type === 'gmail-connected') {
+        setConnecting(false)
+        toast.success('Gmail connected!')
+        refreshStatus()
+      } else if (e.data?.type === 'gmail-error') {
+        setConnecting(false)
+        toast.error('Gmail connection failed')
+      }
     }
+    window.addEventListener('message', onMessage)
+    return () => window.removeEventListener('message', onMessage)
   }, [])
+
+  const connectGmail = async () => {
+    setConnecting(true)
+    try {
+      const res = await fetch('/api/gmail/connect')
+      const data = await res.json()
+      if (!res.ok || !data.url) throw new Error('Failed to start OAuth')
+      const w = window.open(data.url, 'gmail-oauth', 'width=500,height=650,left=200,top=100')
+      // Fallback: if popup blocked, open in same tab (will leave PWA)
+      if (!w) { window.location.href = data.url }
+    } catch {
+      setConnecting(false)
+      toast.error('Could not open Google sign-in')
+    }
+  }
 
   const scan = async () => {
     setScanning(true)
@@ -36,8 +65,7 @@ function GmailBtn() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
       toast.success(`${data.loops_created} new loop${data.loops_created !== 1 ? 's' : ''} detected`)
-      const s = await fetch('/api/gmail/scan').then(r => r.json())
-      setStatus(s)
+      refreshStatus()
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : 'Scan failed')
     } finally {
@@ -49,13 +77,14 @@ function GmailBtn() {
 
   if (!status.connected) {
     return (
-      <a
-        href="/api/gmail/connect"
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-500 border border-dashed border-slate-300 hover:border-slate-400 hover:text-slate-700 transition-all"
+      <button
+        onClick={connectGmail}
+        disabled={connecting}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-500 border border-dashed border-slate-300 hover:border-slate-400 hover:text-slate-700 transition-all disabled:opacity-50"
       >
-        <Mail size={12} />
-        Connect Gmail
-      </a>
+        {connecting ? <Loader2 size={12} className="animate-spin" /> : <Mail size={12} />}
+        {connecting ? 'Opening…' : 'Connect Gmail'}
+      </button>
     )
   }
 

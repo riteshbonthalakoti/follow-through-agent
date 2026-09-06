@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 
 function serviceDb() {
@@ -14,11 +14,16 @@ export async function GET(request: NextRequest) {
   const userId = searchParams.get('state')
   const error = searchParams.get('error')
 
-  if (error || !code || !userId) {
-    return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?gmail=error`
-    )
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL!
+  const closePopup = (msg: string) => {
+    const html = `<!doctype html><html><head><script>
+      if(window.opener){window.opener.postMessage({type:${JSON.stringify(msg)}},${JSON.stringify(appUrl)});window.close();}
+      else{window.location.href=${JSON.stringify(appUrl+'/dashboard')};}
+    </script></head><body></body></html>`
+    return new Response(html, { headers: { 'Content-Type': 'text/html' } })
   }
+
+  if (error || !code || !userId) return closePopup('gmail-error')
 
   // Exchange code for tokens
   const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
@@ -33,11 +38,7 @@ export async function GET(request: NextRequest) {
     }),
   })
 
-  if (!tokenRes.ok) {
-    return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?gmail=error`
-    )
-  }
+  if (!tokenRes.ok) return closePopup('gmail-error')
 
   const tokens = await tokenRes.json()
 
@@ -59,7 +60,5 @@ export async function GET(request: NextRequest) {
     updated_at: new Date().toISOString(),
   }, { onConflict: 'user_id' })
 
-  return NextResponse.redirect(
-    `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?gmail=connected`
-  )
+  return closePopup('gmail-connected')
 }

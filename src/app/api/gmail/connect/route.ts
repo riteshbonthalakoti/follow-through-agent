@@ -21,6 +21,15 @@ export async function GET() {
     state: user.id,
   })
 
+  // Return the URL as JSON so the client can open it in a popup
+  // (keeps PWA in standalone mode — full-page redirect would exit the PWA)
+  const isPopup = true
+  if (isPopup) {
+    return NextResponse.json({
+      url: `https://accounts.google.com/o/oauth2/v2/auth?${params}`,
+    })
+  }
+
   return NextResponse.redirect(
     `https://accounts.google.com/o/oauth2/v2/auth?${params}`
   )
