@@ -7,10 +7,15 @@ const LYZR_BASES = [
 ]
 
 // Auto-detect working Lyzr base URL and create the FollowThrough agent
-export async function POST() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function POST(request: NextRequest) {
+  // Internal secret allows server-side invocation without user session
+  const internalSecret = request.headers.get('x-internal-secret')
+  const isInternal = internalSecret === process.env.MCP_SECRET
+  if (!isInternal) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
   const apiKey = process.env.LYZR_API_KEY
   if (!apiKey) return NextResponse.json({ error: 'LYZR_API_KEY not set' }, { status: 500 })
