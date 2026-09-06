@@ -12,15 +12,32 @@ function serviceDb() {
 }
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  // Also allow owner_id param for agent calls
   const body = await request.json().catch(() => ({}))
-  const userId = user?.id ?? (body.owner_id as string | undefined)
-  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  // Internal secret allows server-side scan trigger
+  const internalSecret = request.headers.get('x-internal-secret')
   const db = serviceDb()
+  let userId: string | undefined
+
+  if (internalSecret === process.env.MCP_SECRET) {
+    // Look up user by email if provided
+    const email = body.email as string | undefined
+    if (email) {
+      const { data: users } = await db.rpc('get_user_id_by_email', { email_input: email }).select()
+      userId = (users as Array<{id: string}> | null)?.[0]?.id
+      if (!userId) {
+        // Try auth.users directly via service role
+        const { data } = await db.from('gmail_connections').select('user_id').eq('gmail_email', email).single()
+        userId = data?.user_id
+      }
+    }
+    if (!userId) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+  } else {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    userId = user?.id ?? (body.owner_id as string | undefined)
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
   // Get Gmail connection
   const { data: conn } = await db
