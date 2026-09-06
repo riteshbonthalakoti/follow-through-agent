@@ -6,14 +6,13 @@ import { toast } from 'sonner'
 import { LoopCard } from './LoopCard'
 import { AddLoopDialog } from './AddLoopDialog'
 import { createClient } from '@/lib/supabase/client'
-import { InboxIcon } from 'lucide-react'
 import type { Loop, LoopState } from '@/types/loop'
 
-const COLUMNS: { state: LoopState; label: string; accent: string; pill: string; bar: string }[] = [
-  { state: 'waiting',   label: 'Waiting',   accent: 'border-slate-200', pill: 'bg-blue-50 text-blue-600',     bar: 'bg-blue-400' },
-  { state: 'due',       label: 'Due',       accent: 'border-amber-200', pill: 'bg-amber-50 text-amber-600',   bar: 'bg-amber-400' },
-  { state: 'overdue',   label: 'Overdue',   accent: 'border-red-200',   pill: 'bg-red-50 text-red-600',       bar: 'bg-red-400' },
-  { state: 'escalated', label: 'Escalated', accent: 'border-violet-200',pill: 'bg-violet-50 text-violet-600', bar: 'bg-violet-400' },
+const COLUMNS: { state: LoopState; label: string; accent: string; pill: string; bar: string; emptyIcon: string; emptyText: string }[] = [
+  { state: 'waiting',   label: 'Waiting',   accent: 'border-slate-200', pill: 'bg-blue-50 text-blue-600',     bar: 'bg-blue-400',   emptyIcon: '⏳', emptyText: 'No loops waiting on others' },
+  { state: 'due',       label: 'Due',       accent: 'border-amber-200', pill: 'bg-amber-50 text-amber-600',   bar: 'bg-amber-400',  emptyIcon: '✅', emptyText: 'Nothing due today' },
+  { state: 'overdue',   label: 'Overdue',   accent: 'border-red-200',   pill: 'bg-red-50 text-red-600',       bar: 'bg-red-400',    emptyIcon: '🎉', emptyText: 'Nothing overdue — you\'re on top of it' },
+  { state: 'escalated', label: 'Escalated', accent: 'border-violet-200',pill: 'bg-violet-50 text-violet-600', bar: 'bg-violet-400', emptyIcon: '🤝', emptyText: 'No escalations needed' },
 ]
 
 interface LoopBoardProps {
@@ -90,12 +89,12 @@ export function LoopBoard({ externalDialogOpen, onExternalDialogClose }: LoopBoa
 
   return (
     <>
-      <div className="overflow-x-auto -mx-1 px-1">
-        <div className="flex gap-4 min-w-[640px] md:min-w-0 md:grid md:grid-cols-4">
-          {COLUMNS.map(({ state, label, accent, pill, bar }) => {
+      <div className="overflow-x-auto -mx-1 px-1 pb-2">
+        <div className="flex gap-4" style={{ minWidth: 'max(640px, 100%)' }}>
+          {COLUMNS.map(({ state, label, accent, pill, bar, emptyIcon, emptyText }) => {
             const items = loops.filter(l => l.state === state)
             return (
-              <div key={state} className="flex-1 min-w-0 flex flex-col gap-3">
+              <div key={state} className="flex-1 min-w-[260px] flex flex-col gap-3">
                 {/* Column header */}
                 <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white border ${accent} shadow-sm`}>
                   <div className={`w-2 h-2 rounded-full ${bar}`} />
@@ -106,9 +105,9 @@ export function LoopBoard({ externalDialogOpen, onExternalDialogClose }: LoopBoa
                 {/* Cards */}
                 <div className="flex flex-col gap-2.5 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 260px)' }}>
                   {items.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center gap-2 py-10 rounded-2xl border border-dashed border-slate-200 bg-white/50">
-                      <InboxIcon size={18} className="text-slate-300" />
-                      <p className="text-xs text-slate-300 font-medium">All clear</p>
+                    <div className="flex flex-col items-center justify-center gap-3 py-10 rounded-2xl border border-dashed border-slate-200 bg-white/50 text-center px-4">
+                      <span className="text-2xl">{emptyIcon}</span>
+                      <p className="text-xs text-slate-300 font-medium leading-relaxed">{emptyText}</p>
                     </div>
                   ) : (
                     items.map(loop => (

@@ -32,6 +32,12 @@ function dueDateLabel(d: string) {
   return `due ${formatDistanceToNow(date, { addSuffix: true })}`
 }
 
+function confidenceColor(c: number) {
+  if (c >= 0.8) return 'bg-green-400'
+  if (c >= 0.5) return 'bg-amber-400'
+  return 'bg-red-400'
+}
+
 interface LoopCardProps {
   loop: Loop
   onUpdate: (u: Loop) => void
@@ -42,6 +48,8 @@ export function LoopCard({ loop, onUpdate, onClose }: LoopCardProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [closing, setClosing] = useState(false)
   const cfg = STATE_CONFIG[loop.state] ?? STATE_CONFIG.waiting
+  const isOverdue = loop.state === 'overdue'
+  const conf = loop.confidence ?? 0
 
   const handleClose = async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -71,13 +79,34 @@ export function LoopCard({ loop, onUpdate, onClose }: LoopCardProps) {
       className={cn(
         'group relative rounded-2xl bg-white border border-slate-200/80 shadow-sm overflow-hidden',
         'hover:shadow-md hover:border-slate-300 transition-all duration-150',
-        closing && 'opacity-50 pointer-events-none'
+        closing && 'opacity-50 pointer-events-none',
+        isOverdue && 'overdue-pulse'
       )}
     >
+      {/* Overdue pulse ring — CSS only, no JS */}
+      {isOverdue && (
+        <style>{`
+          .overdue-pulse::after {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: inherit;
+            border: 2px solid rgba(239,68,68,0.4);
+            animation: overdueRing 2s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+          }
+          @keyframes overdueRing {
+            0%,100% { opacity: 0; transform: scale(1); }
+            50%      { opacity: 1; transform: scale(1.01); }
+          }
+        `}</style>
+      )}
+
       {/* State accent bar */}
       <div className={cn('absolute left-0 top-0 bottom-0 w-[3px]', cfg.left)} />
 
-      <div className="pl-4 pr-3 pt-3 pb-3">
+      <div className="pl-4 pr-3 pt-3 pb-3 relative z-10">
         {/* Top row */}
         <div className="flex items-start justify-between gap-2 mb-2.5">
           <div className="flex items-center gap-2 min-w-0">
@@ -162,6 +191,15 @@ export function LoopCard({ loop, onUpdate, onClose }: LoopCardProps) {
             )}
           </div>
         )}
+      </div>
+
+      {/* Confidence meter — thin bar at bottom */}
+      <div className="h-[3px] w-full bg-slate-100">
+        <div
+          className={cn('h-full transition-all duration-500', confidenceColor(conf))}
+          style={{ width: `${Math.round(conf * 100)}%` }}
+          title={`Confidence: ${Math.round(conf * 100)}%`}
+        />
       </div>
     </div>
   )
