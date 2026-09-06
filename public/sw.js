@@ -61,7 +61,10 @@ self.addEventListener('fetch', e => {
   e.respondWith(
     caches.match(request).then(cached => {
       const networkFetch = fetch(request).then(res => {
-        if (res.ok) caches.open(CACHE).then(c => c.put(request, res.clone()))
+        if (res.ok) {
+          const toCache = res.clone()
+          caches.open(CACHE).then(c => c.put(request, toCache))
+        }
         return res
       })
       return cached || networkFetch
