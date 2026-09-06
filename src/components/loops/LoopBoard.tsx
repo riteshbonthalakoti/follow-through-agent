@@ -150,7 +150,7 @@ export function LoopBoard({ externalDialogOpen, onExternalDialogClose }: LoopBoa
 
   return (
     <>
-      <div className="overflow-x-auto -mx-1 px-1 pb-2">
+      <div className="overflow-x-auto -mx-1 px-1 pb-2 snap-x snap-mandatory sm:snap-none">
         <div className="flex gap-4" style={{ minWidth: 'max(640px, 100%)' }}>
           {COLUMNS.map(({ state, label, accent, pill, bar, emptyIcon, emptyText }) => {
             const raw = loops.filter(l => l.state === state)
@@ -158,9 +158,9 @@ export function LoopBoard({ externalDialogOpen, onExternalDialogClose }: LoopBoa
               ? [...raw].sort((a, b) => computePriority(b) - computePriority(a))
               : raw
             return (
-              <div key={state} className="flex-1 min-w-[260px] flex flex-col gap-3">
+              <div key={state} className="flex-1 min-w-[260px] flex flex-col gap-3 snap-start">
                 {/* Column header */}
-                <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white border ${accent} shadow-sm`}>
+                <div className={`sticky top-14 z-10 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white border ${accent} shadow-sm`}>
                   <div className={`w-2 h-2 rounded-full ${bar}`} />
                   <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">{label}</span>
                   <span className={`ml-auto text-xs font-bold px-2 py-0.5 rounded-full ${pill}`}>{items.length}</span>

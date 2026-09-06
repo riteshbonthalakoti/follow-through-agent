@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react'
 import { LoopBoard } from '@/components/loops/LoopBoard'
-import { AlertTriangle, Clock, Hourglass, Zap, CheckCircle2, LayoutList } from 'lucide-react'
+import { AlertTriangle, Clock, CheckCircle2, LayoutList } from 'lucide-react'
 import { isThisWeek } from 'date-fns'
 
 interface StatsData {
