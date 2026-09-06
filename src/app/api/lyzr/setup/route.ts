@@ -41,7 +41,7 @@ export async function POST() {
     name: 'FollowThrough Agent',
     agent_description: 'Tracks open commitment loops and drafts professional follow-up emails for human approval.',
     llm_config: {
-      model: 'gpt-4o-mini',
+      model: 'gpt-4o',
       temperature: 0.4,
       top_p: 0.9,
     },
