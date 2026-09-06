@@ -149,6 +149,57 @@
         }
       }
     },
+    "/api/loops/{loop_id}/send": {
+      "post": {
+        "operationId": "sendEmail",
+        "summary": "Send a follow-up email for a loop via the user's Gmail. The loop must have a draft (next_action) set. Marks loop as escalated after sending.",
+        "parameters": [
+          {
+            "name": "x-internal-secret",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "loop_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "UUID of the loop to send follow-up for"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["owner_id"],
+                "properties": {
+                  "owner_id": { "type": "string", "description": "User ID who owns the loop" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Email sent successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "sent": { "type": "boolean" },
+                    "message_id": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/lyzr/draft": {
       "post": {
         "operationId": "generateDraft",

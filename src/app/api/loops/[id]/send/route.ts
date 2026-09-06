@@ -47,20 +47,30 @@ function buildEmail(from: string, to: string, subject: string, body: string): st
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+  const body = await request.json().catch(() => ({}))
 
-  const supabase = await createServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
+  const internalSecret = request.headers.get('x-internal-secret')
   const db = serviceDb()
+  let ownerId: string
+
+  if (internalSecret === process.env.MCP_SECRET) {
+    // Agent-triggered: owner_id must be in body
+    if (!body.owner_id) return NextResponse.json({ error: 'owner_id required for agent calls' }, { status: 400 })
+    ownerId = body.owner_id
+  } else {
+    const supabase = await createServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    ownerId = user.id
+  }
 
   // Load loop
-  const { data: loop, error: loopErr } = await db.from('loops').select('*').eq('id', id).eq('owner_id', user.id).single()
+  const { data: loop, error: loopErr } = await db.from('loops').select('*').eq('id', id).eq('owner_id', ownerId).single()
   if (loopErr || !loop) return NextResponse.json({ error: 'Loop not found' }, { status: 404 })
   if (!loop.next_action) return NextResponse.json({ error: 'No draft to send' }, { status: 400 })
 
   // Load Gmail connection
-  const { data: conn, error: connErr } = await db.from('gmail_connections').select('*').eq('user_id', user.id).single()
+  const { data: conn, error: connErr } = await db.from('gmail_connections').select('*').eq('user_id', ownerId).single()
   if (connErr || !conn) return NextResponse.json({ error: 'Gmail not connected. Connect Gmail first.' }, { status: 400 })
 
   // Refresh token if needed
