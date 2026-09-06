@@ -24,7 +24,7 @@ export async function detectLoopsFromThreads(
 
   const today = new Date().toISOString().split('T')[0]
 
-  const prompt = `You are analyzing email threads to detect "open loops" — situations where someone owes the user a response, deliverable, or action.
+  const prompt = `You are analyzing email threads to detect "open loops" — any pending action, reply, commitment, or deliverable that has not been resolved yet.
 
 User's email: ${userEmail}
 Today's date: ${today}
@@ -37,18 +37,26 @@ Date: ${t.lastMessageDate}
 Preview: ${t.snippet}
 `).join('\n')}
 
-For each thread that represents an open loop (something someone owes the user), return a JSON array.
-Only include threads where someone owes the user something — ignore threads where the user owes someone else.
-If no open loops, return [].
+Detect ANY thread where:
+- Someone promised to send something (document, feedback, money, reply, file)
+- A meeting or call was mentioned and needs confirmation
+- Someone asked for something and hasn't gotten a reply
+- There's a deadline, due date, or follow-up implied
+- The conversation ended without resolution
+
+Be GENEROUS — if there's any chance it's an open commitment, include it.
+Return JSON for EVERY thread that might have a pending action (both inbound and outbound).
+If truly nothing is pending in any thread, return [].
 
 Return ONLY valid JSON array, no markdown:
 [
   {
     "thread_index": 1,
-    "counterparty": "First name or company",
-    "description": "What they owe you (one sentence)",
-    "expected_by": "YYYY-MM-DD (estimate based on context, default 7 days from today if unclear)",
-    "confidence": 0.0-1.0
+    "counterparty": "First name or company name",
+    "description": "What is pending (one clear sentence)",
+    "expected_by": "YYYY-MM-DD (default: 7 days from today if unclear)",
+    "confidence": 0.0-1.0,
+    "direction": "inbound or outbound"
   }
 ]`
 

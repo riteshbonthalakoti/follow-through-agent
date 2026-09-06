@@ -70,18 +70,19 @@ export async function POST(request: NextRequest) {
   // AI detection
   const detectedLoops = await detectLoopsFromThreads(newThreads as Parameters<typeof detectLoopsFromThreads>[0], conn.gmail_email)
 
-  // Filter by confidence
-  const highConfidence = detectedLoops.filter((l) => l.confidence >= 0.6)
+  // Filter by confidence — lower threshold so more emails are caught
+  const highConfidence = detectedLoops.filter((l) => l.confidence >= 0.3)
 
   // Create loops
   let created = 0
   for (const loop of highConfidence) {
+    const dir = (loop as { direction?: string }).direction === 'outbound' ? 'outbound' : 'inbound'
     const { error } = await db.from('loops').insert({
       owner_id: userId,
       counterparty: loop.counterparty,
       description: loop.description,
       expected_by: loop.expected_by,
-      direction: 'inbound',
+      direction: dir,
       source: 'email',
       source_ref: loop.thread_id,
       state: 'waiting',
