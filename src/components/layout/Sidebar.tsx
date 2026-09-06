@@ -2,8 +2,9 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { LayoutDashboard, CheckCircle, LogOut } from 'lucide-react'
+import { LayoutDashboard, CheckCircle, LogOut, Mail } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { GmailConnect } from '@/components/gmail/GmailConnect'
@@ -88,6 +89,7 @@ export function Sidebar({ userEmail }: SidebarProps) {
             <span>{label}</span>
           </Link>
         ))}
+        <MobileGmailButton />
         <button
           onClick={handleSignOut}
           className="flex-1 flex flex-col items-center gap-1 py-3 text-[10px] font-medium text-[#71717a]"
@@ -97,5 +99,38 @@ export function Sidebar({ userEmail }: SidebarProps) {
         </button>
       </nav>
     </>
+  )
+}
+
+function MobileGmailButton() {
+  const [connected, setConnected] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/gmail/scan').then(r => r.json()).then(d => setConnected(!!d.connected)).catch(() => {})
+  }, [])
+
+  const handleConnect = async () => {
+    try {
+      const res = await fetch('/api/gmail/connect')
+      const data = await res.json()
+      if (!data.url) return
+      const popup = window.open(data.url, 'gmail-oauth', 'width=500,height=650,left=50,top=50')
+      const timer = setInterval(() => {
+        if (!popup || popup.closed) {
+          clearInterval(timer)
+          fetch('/api/gmail/scan').then(r => r.json()).then(d => setConnected(!!d.connected)).catch(() => {})
+        }
+      }, 800)
+    } catch { /* ignore */ }
+  }
+
+  return (
+    <button
+      onClick={handleConnect}
+      className="flex-1 flex flex-col items-center gap-1 py-3 text-[10px] font-medium transition-colors text-[#71717a]"
+    >
+      <Mail size={20} className={connected ? 'text-green-500' : undefined} />
+      <span>{connected ? 'Gmail ✓' : 'Gmail'}</span>
+    </button>
   )
 }
